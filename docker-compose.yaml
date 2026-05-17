@@ -1,0 +1,12 @@
+
+services:
+  database:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: okane
+      POSTGRES_PASSWORD: okane
+      POSTGRES_DB: okane
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./Migrations:/docker-entrypoint-initdb.d/

@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".gitignore" />
+    <File Path="1_CREATE_LEDGER_TABLE.sql" />
+    <File Path="docker-compose.yaml" />
+    <File Path="Migrations/0_CREATE_USER.sql" />
+  </Folder>
+  <Project Path="Okane.FrontEnd/Okane.FrontEnd.esproj">
+    <Build />
+    <Deploy />
+  </Project>
+  <Project Path="Okane/Okane.csproj" />
+</Solution>
