@@ -4,10 +4,11 @@
     <File Path="1_CREATE_LEDGER_TABLE.sql" />
     <File Path="docker-compose.yaml" />
     <File Path="Migrations/0_CREATE_USER.sql" />
+    <File Path="README.md" />
   </Folder>
   <Project Path="Okane.FrontEnd/Okane.FrontEnd.esproj">
     <Build />
-    <Deploy />
+    <Deploy Solution="Release|*" />
   </Project>
   <Project Path="Okane/Okane.csproj" />
 </Solution>
