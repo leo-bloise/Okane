@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Okane.Infrastructure.Requests;
 using Okane.Infrastructure.Responses;
@@ -9,6 +10,7 @@ namespace Okane.Controllers;
 public class AuthController(Authentication.Services.IAuthenticationService authenticationService, ILogger<AuthController> logger): ControllerBase
 {
     [HttpGet("me")]
+    [Authorize]
     public IActionResult Me()
     {
         return Ok(User);
