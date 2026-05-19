@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS ledger (
 	amount NUMERIC(19, 4) NOT NULL,
 	description TEXT,
 	user_id BIGINT NOT NULL REFERENCES users(id),
-	fingerprint CHAR(64) NOT NULL,
-	occured_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-	CONSTRAINT unique_fingerprint UNIQUE (user_id, fingerprint)
+	origin BIGINT NOT NULL REFERENCES accounts(id)
+	to BIGINT NOT NULL REFERENCES accounts(id)
+	occured_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
