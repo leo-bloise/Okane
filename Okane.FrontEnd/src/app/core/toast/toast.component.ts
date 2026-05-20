@@ -1,9 +1,12 @@
 import { Component, Input } from "@angular/core";
+import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
 
 @Component({
-    standalone: false,
-    selector: 'app-toast',
-
+    standalone: true,
+    imports: [
+        MatProgressSpinnerModule
+    ],
+    selector: 'app-toast',    
     template: `
         <div
             class="toast"
@@ -12,14 +15,12 @@ import { Component, Input } from "@angular/core";
             [class.md]="size === 'md'"
             [class.lg]="size === 'lg'"
         >
-            @if(loading == "true") {
+            @if(loading) {
                 <mat-spinner
                     [diameter]="spinnerDiameter"
                     [class]="'spinner-' + variant">
                 </mat-spinner>
-            }
-
-            @if(icon && loading != "true") {
+            } @else if(icon) {
                 <span class="material-symbols-outlined icon"
                     [class.icon-sm]="size === 'sm'"
                     [class.icon-md]="size === 'md'"
@@ -28,10 +29,7 @@ import { Component, Input } from "@angular/core";
                 </span>
             }
 
-            @if(loading != "true") {
-                <p>{{ message }}</p>
-            }
-            <button matButton="text">OK</button>
+            <p>{{ message }}</p>
         </div>
     `,
 
@@ -52,10 +50,16 @@ import { Component, Input } from "@angular/core";
             display: flex;
             align-items: center;
             justify-content: center;
+
+            opacity: 0;
+            transition: opacity .25s ease;
+        }
+
+        :host(.visible) {
+            opacity: 1;
         }
 
         .toast {
-
             border-radius: 1rem;
 
             display: flex;
@@ -68,14 +72,18 @@ import { Component, Input } from "@angular/core";
 
             box-sizing: border-box;
 
-            box-shadow:
-                0 4px 12px rgba(0, 0, 0, .15);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, .15);
 
             font-family: inherit;
 
+            transform: translateY(12px);
             transition:
-                transform .2s ease,
-                opacity .2s ease;
+                transform .25s ease,
+                opacity .25s ease;
+        }
+
+        :host(.visible) .toast {
+            transform: translateY(0);
         }
 
         .toast p {
@@ -86,17 +94,9 @@ import { Component, Input } from "@angular/core";
             line-height: 1;
         }
 
-        .icon-sm {
-            font-size: 1.5rem;
-        }
-
-        .icon-md {
-            font-size: 2rem;
-        }
-
-        .icon-lg {
-            font-size: 2.75rem;
-        }
+        .icon-sm { font-size: 1.5rem; }
+        .icon-md { font-size: 2rem; }
+        .icon-lg { font-size: 2.75rem; }
 
         .toast.info {
             background-color: var(--mat-sys-primary);
@@ -111,52 +111,24 @@ import { Component, Input } from "@angular/core";
         .toast.surface {
             background-color: var(--mat-sys-surface);
             color: var(--mat-sys-on-surface);
-
-            border:
-                1px solid var(--mat-sys-outline);
+            border: 1px solid var(--mat-sys-outline);
         }
 
-        .toast.sm {
-            width: 240px;
-            min-height: 80px;
-        }
+        .toast.sm { width: 240px; min-height: 80px; }
+        .toast.md { width: 320px; min-height: 120px; }
+        .toast.lg { width: 420px; min-height: 160px; }
 
-        .toast.md {
-            width: 320px;
-            min-height: 120px;
-        }
-
-        .toast.lg {
-            width: 420px;
-            min-height: 160px;
-        }
-        
-        .spinner-info circle {
-            stroke: var(--mat-sys-on-primary);
-        }
-
-        .spinner-error circle {
-            stroke: var(--mat-sys-on-error);
-        }
-
-        .spinner-surface circle {
-            stroke: var(--mat-sys-primary);
-        }
+        .spinner-info    circle { stroke: var(--mat-sys-on-primary); }
+        .spinner-error   circle { stroke: var(--mat-sys-on-error); }
+        .spinner-surface circle { stroke: var(--mat-sys-primary); }
     `]
 })
 export class ToastComponent {
 
-    @Input()
-    message = 'Toast message';
-
-    @Input()
-    variant: 'info' | 'error' | 'surface' = 'surface';
-
-    @Input()
-    size: 'sm' | 'md' | 'lg' = 'md';
-
-    @Input()
-    icon:
+    @Input() message = 'Toast message';
+    @Input() variant: 'info' | 'error' | 'surface' = 'surface';
+    @Input() size: 'sm' | 'md' | 'lg' = 'md';
+    @Input() icon:
         | 'check_circle'
         | 'error'
         | 'info'
@@ -166,16 +138,9 @@ export class ToastComponent {
         | 'savings'
         | 'close'
         | null = null;
-
-    @Input()
-    loading: string = "false";
+    @Input() loading = false;
 
     get spinnerDiameter(): number {
-        const diameters: Record<'sm' | 'md' | 'lg', number> = {
-            sm: 24,
-            md: 32,
-            lg: 44,
-        };
-        return diameters[this.size];
+        return { sm: 24, md: 32, lg: 44 }[this.size];
     }
 }

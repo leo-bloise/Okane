@@ -3,6 +3,7 @@ import { BehaviorSubject, catchError, finalize, tap, throwError } from "rxjs";
 import { AuthApi } from "../services/auth.api";
 import { HttpErrorResponse } from "@angular/common/http";
 import { LoginRequest } from "../services/dtos/login.request";
+import { BaseError } from "../../core/errors/base.error";
 
 @Injectable({
   providedIn: 'root'
@@ -10,22 +11,26 @@ import { LoginRequest } from "../services/dtos/login.request";
 export class AuthStore {
   private readonly loadingSubject = new BehaviorSubject(false);
   public readonly loading$ = this.loadingSubject.asObservable();
-  private readonly errorSubject = new BehaviorSubject<string | null>(null);
-  public readonly error$ = this.errorSubject.asObservable();
 
   constructor(private apiService: AuthApi) { }
 
   login(request: LoginRequest) {
     this.loadingSubject.next(true);
-    this.errorSubject.next(null);
 
     return this.apiService.login(request)
       .pipe(
         tap(response => {
           console.log('Login successful:', response);
         }),
-        catchError((err, caught) => {
-          this.errorSubject.next(err.message);
+        catchError((err, _) => {
+          if(err instanceof HttpErrorResponse) {
+            switch(err.status) {
+              case 401:
+                return throwError(() => new BaseError('Invalid email or password. Please try again.'));
+              default:
+                return throwError(() => new BaseError('An unexpected error occurred. Please try again later.'));
+            }
+          }
 
           return throwError(() => err);
         }),

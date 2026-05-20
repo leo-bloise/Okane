@@ -4,6 +4,7 @@ using Okane.Authentication;
 using Okane.Authentication.Repositories;
 using Okane.Authentication.Requests;
 using Okane.Authentication.Services;
+using Okane.Core.Exceptions;
 using Okane.Infrastructure.Options;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -41,10 +42,10 @@ public class AuthenticationService(
     {
         User? user = await userRepository.FindByEmailAsync(request.Email, cancellationToken);
 
-        if (user is null) throw new Exception("Not authorized");
+        if (user is null) throw new DomainException("Not authorized", 401);
 
         if (!await passwordHasher.VerifyPasswordAsync(request.Password, user.Password, cancellationToken))
-            throw new Exception("Not authorized");
+            throw new DomainException("Not authorized", 401);
 
         return CreateToken(user);
     }
@@ -54,7 +55,7 @@ public class AuthenticationService(
         ArgumentNullException.ThrowIfNull(request, nameof(request));
 
         if(await userRepository.ExistsByEmailAsync(request.Email, cancellationToken)) // change for domain exception
-            throw new Exception("Email already taken");
+            throw new DetailedException("Email already taken", 422, new Dictionary<string, object?>(){ { "email", "Email already taken" } });
 
         User user = new User(request.Email, await passwordHasher.HashPasswordAsync(request.Password, cancellationToken));
 

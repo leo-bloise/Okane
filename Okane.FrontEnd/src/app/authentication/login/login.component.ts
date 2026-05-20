@@ -1,4 +1,4 @@
-import { Component } from "@angular/core";
+import { Component, signal, WritableSignal } from "@angular/core";
 import { FormControl, FormGroup, FormSubmittedEvent, ReactiveFormsModule } from "@angular/forms";
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -8,6 +8,8 @@ import { RouterModule } from '@angular/router';
 import { Title } from "../../ui/title";
 import { Logo } from "../../ui/logo";
 import { AuthStore } from "../stores/auth.store";
+import { ToastService } from "../../core/toast/services/toast.service";
+import { firstValueFrom } from "rxjs";
 
 @Component({
   selector: 'app-login',
@@ -26,8 +28,11 @@ import { AuthStore } from "../stores/auth.store";
   ]
 })
 export class LoginComponent {
+  public errorMessage: WritableSignal<string | null> = signal(null);
+
   constructor(
-    private readonly authStore: AuthStore
+    private readonly authStore: AuthStore,
+    private readonly toastService: ToastService
   ) { }
 
   loginForm = new FormGroup({
@@ -35,22 +40,36 @@ export class LoginComponent {
     password: new FormControl(''),
   });
 
-  onSubmit($event: FormSubmittedEvent) {
+  async cleanMessages() {
+    if(this.errorMessage() === null) return;
+
+    this.errorMessage.set(null);
+  }
+
+  async onSubmit() {
     const request = {
       email: this.loginForm.value.email ?? '',
       password: this.loginForm.value.password ?? '',
-    }
+    };
+    
     this.authStore.login(request)
-    .subscribe({
-      next: (response) => {
-        console.log('Login successful:', response);
-      },
-      error: (err) => {
-        console.error('Login failed:', err);
-      },
-      complete: () => {
-        console.log('Login request completed');
-      }
-    });
+      .subscribe({
+        next: (response) => {
+          console.log('Login successful:', response);
+        },
+        error: (err) => {
+          this.errorMessage.set(err.message);
+          this.toastService.hide();
+        },
+        complete: () => {
+          console.log('Login request completed');
+        }
+      });
+    
+    this.toastService.show({
+      message: '',
+      variant: 'surface',
+      loading: await firstValueFrom(this.authStore.loading$)
+    })
   }
 }

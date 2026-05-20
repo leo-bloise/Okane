@@ -3,6 +3,7 @@ using Microsoft.IdentityModel.Tokens;
 using Okane.Authentication.Repositories;
 using Okane.Authentication.Services;
 using Okane.Infrastructure;
+using Okane.Infrastructure.ExceptionHandler;
 using Okane.Infrastructure.Options;
 using Okane.Infrastructure.Repositories;
 using Okane.Infrastructure.Services;
@@ -62,11 +63,22 @@ public class Program
         builder.Services
             .AddScoped<IAuthenticationService, AuthenticationService>();
 
+        builder
+            .Services
+            .AddExceptionHandler<DomainExceptionHandler>();
+        builder
+            .Services
+            .AddExceptionHandler<DetailedExceptionHandler>();
+
+        builder.Services.AddProblemDetails();
+
         WebApplication app = builder.Build();
 
         app.UseAuthentication();
 
         app.UseAuthorization();
+
+        app.UseExceptionHandler();
 
         app.MapControllers();
 
