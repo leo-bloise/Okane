@@ -7,9 +7,5 @@
     <File Path="Migrations/1_CREATE_LEDGER_TABLE.sql" />
     <File Path="README.md" />
   </Folder>
-  <Project Path="Okane.FrontEnd/Okane.FrontEnd.esproj">
-    <Build />
-    <Deploy Solution="Release|*" />
-  </Project>
   <Project Path="Okane/Okane.csproj" />
 </Solution>
