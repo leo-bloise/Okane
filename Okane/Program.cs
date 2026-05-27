@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Okane.Accounts.Repositories;
+using Okane.Accounts.Services;
 using Okane.Authentication.Repositories;
 using Okane.Authentication.Services;
 using Okane.Infrastructure;
@@ -25,6 +27,7 @@ public class Program
             {
                 var jwtOptions = builder.Configuration.GetRequiredSection("JwtOptions").Get<JwtOptions>();
 
+                options.MapInboundClaims = false;
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,
@@ -59,9 +62,14 @@ public class Program
         builder.Services
             .AddScoped<IUserRepository, UserRepository>();
         builder.Services
+            .AddScoped<IAccountRepository, AccountRepository>();
+
+        builder.Services
             .AddScoped<IPasswordHasher, BCryptPasswordHasher>();
         builder.Services
             .AddScoped<IAuthenticationService, AuthenticationService>();
+        builder.Services
+            .AddScoped<IAccountService, AccountService>();
 
         builder
             .Services

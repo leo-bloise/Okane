@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS ledger (
 	amount NUMERIC(19, 4) NOT NULL,
 	description TEXT,
 	user_id BIGINT NOT NULL REFERENCES users(id),
-	origin BIGINT NOT NULL REFERENCES accounts(id)
-	to BIGINT NOT NULL REFERENCES accounts(id)
+	from_account BIGINT NOT NULL REFERENCES accounts(id),
+	to_account BIGINT NOT NULL REFERENCES accounts(id),
 	occured_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

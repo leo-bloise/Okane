@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Okane.Accounts;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Okane.Authentication;
@@ -19,6 +20,8 @@ public class User
 
     [Column("created_at")]
     public DateTime CreatedAt { get; set; }
+
+    public ICollection<Account> Accounts { get; set; } = new List<Account>();
 
     public User() { }
 
