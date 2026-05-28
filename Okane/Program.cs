@@ -9,6 +9,8 @@ using Okane.Infrastructure.ExceptionHandler;
 using Okane.Infrastructure.Options;
 using Okane.Infrastructure.Repositories;
 using Okane.Infrastructure.Services;
+using Okane.Ledger.Repositories;
+using Okane.Ledger.Services;
 
 namespace Okane;
 
@@ -63,6 +65,8 @@ public class Program
             .AddScoped<IUserRepository, UserRepository>();
         builder.Services
             .AddScoped<IAccountRepository, AccountRepository>();
+        builder.Services
+            .AddScoped<ILedgerRepository, LedgerRepository>();
 
         builder.Services
             .AddScoped<IPasswordHasher, BCryptPasswordHasher>();
@@ -70,6 +74,8 @@ public class Program
             .AddScoped<IAuthenticationService, AuthenticationService>();
         builder.Services
             .AddScoped<IAccountService, AccountService>();
+        builder.Services
+            .AddScoped<ILedgerService, LedgerService>();
 
         builder
             .Services

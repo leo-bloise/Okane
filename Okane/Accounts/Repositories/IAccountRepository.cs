@@ -1,4 +1,5 @@
 ﻿using Okane.Core.Data;
+using System.Collections.Immutable;
 
 namespace Okane.Accounts.Repositories;
 
@@ -11,4 +12,6 @@ public interface IAccountRepository
     public Task<Account?> FindByIdAsync(int id, int userId, CancellationToken cancellationToken);
 
     public Task<Page<Account>> GetPageAsync(int userId, int pageIndex, int pageSize, CancellationToken cancellationToken);
+
+    public Task<bool> ExistAllAsync(int userId, CancellationToken cancellationToken, params int[] ids);
 }

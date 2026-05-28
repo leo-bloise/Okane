@@ -2,6 +2,7 @@
 using Okane.Accounts;
 using Okane.Accounts.Repositories;
 using Okane.Core.Data;
+using System.Collections.Immutable;
 
 namespace Okane.Infrastructure.Repositories;
 
@@ -10,6 +11,14 @@ public class AccountRepository(OkaneDbContext okaneDbContext) : IAccountReposito
     public Task<bool> ExistsByNameAsync(string name, int userId, CancellationToken cancellationToken)
     {
         return okaneDbContext.Accounts.AnyAsync(a => a.Name == name && a.User.Id == userId, cancellationToken);
+    }
+
+    public async Task<bool> ExistAllAsync(int userId, CancellationToken cancellationToken, params int[] ids)
+    {
+        return await okaneDbContext
+            .Accounts
+            .Where(a => ids.Contains(a.Id))
+            .CountAsync(cancellationToken) == ids.Length;
     }
 
     public Task<Account?> FindByIdAsync(int id, int userId, CancellationToken cancellationToken)
