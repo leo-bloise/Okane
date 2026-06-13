@@ -1,4 +1,5 @@
 ﻿using Okane.Accounts.Repositories;
+using Okane.Core.Data;
 using Okane.Core.Exceptions;
 using Okane.Ledger;
 using Okane.Ledger.Repositories;
@@ -27,6 +28,11 @@ public class LedgerService(ILedgerRepository ledgerRepository, IAccountRepositor
         };
 
         return await ledgerRepository.CreateTransactionAsync(transaction, cancellationToken);
+    }
+
+    public Task<Page<Transaction>> GetPagedTransaction(int userId, int pageIndex, int pageSize, CancellationToken cancellationToken)
+    {
+        return ledgerRepository.GetPageAsync(userId, pageIndex, pageSize, cancellationToken);    
     }
 
     public Task<Transaction?> GetTransactionAsync(int id, int userId, CancellationToken cancellationToken)

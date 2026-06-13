@@ -4,9 +4,12 @@ type Props = {
     currentPage: number;
     totalPages: number;
     pageSize: number;
+    previousLinkFactory: (currentPage: number, pageSize: number) => string;
+    nextLinkFactory: (currentPage: number, pageSize: number) => string;
+    currentLinkFactory: (index: number, pageSize: number) => string;
 }
 
-export default function AccountsPaginationHandler({ currentPage, totalPages, pageSize }: Props) {
+export default function GeneralPaginationHandler({ currentPage, totalPages, pageSize, nextLinkFactory, currentLinkFactory, previousLinkFactory }: Props) {
     const indexesToShow: number[] = [];
 
     for (let i = 0; i < totalPages; i++) {
@@ -19,15 +22,15 @@ export default function AccountsPaginationHandler({ currentPage, totalPages, pag
     return <Pagination>
         <PaginationContent>
             {hasPrevious && <PaginationItem>
-                <PaginationPrevious href={`/accounts?page=${currentPage - 1}&pageSize=${pageSize}`} />
+                <PaginationPrevious href={previousLinkFactory(currentPage, pageSize)} />
             </PaginationItem>}
             {indexesToShow.map(index =>
                 <PaginationItem key={index}>
-                    <PaginationLink href={`/accounts?page=${index - 1}&pageSize=${pageSize}`} isActive={index === (currentPage + 1)}>{index}</PaginationLink>
+                    <PaginationLink href={currentLinkFactory(index, pageSize)} isActive={index === (currentPage + 1)}>{index}</PaginationLink>
                 </PaginationItem>
             )}
             {hasNext && <PaginationItem>
-                <PaginationNext href={`/accounts?page=${currentPage + 1}&pageSize=${pageSize}`} />
+                <PaginationNext href={nextLinkFactory(currentPage, pageSize)} />
             </PaginationItem>}
         </PaginationContent>
     </Pagination>

@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Okane.Accounts;
 using Okane.Authentication;
+using Okane.Core.Data;
 using Okane.Infrastructure.Requests;
 using Okane.Infrastructure.Responses;
 using Okane.Ledger;
@@ -44,6 +46,26 @@ public class TransactionController(ILedgerService ledgerService) : ControllerBas
             { "toAccountId", transaction.ToAccountId },
             { "occured_at", transaction.OccuredAt }
         };
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetPage([FromQuery] PageRequest request, CancellationToken cancellationToken)
+    {
+        User? user = GetUser();
+
+        if (user is null) throw new UnauthorizedAccessException();
+
+        Page<Transaction> page = await ledgerService.GetPagedTransaction(user.Id, request.Page, request.PageSize, cancellationToken);
+
+        Dictionary<string, object?> response = new()
+        {
+            { "items", page.Items.Select(t => this.MapTransaction(t)) },
+            { "totalPages", page.TotalPages },
+            { "pageSize", page.PageSize },
+            { "pageIndex", page.PageIndex }
+        };
+
+        return Ok(ResponsesFacade.Ok("Accounts retrieved successfully", response));
     }
 
     [HttpGet("{id}")]

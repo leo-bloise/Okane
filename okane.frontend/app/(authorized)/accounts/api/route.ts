@@ -1,51 +1,14 @@
-import { NotAuthorizedError } from "@/lib/errors/not-authorized.errors";
 import { createAccount, getPaginatedAccounts } from "@/lib/service/accounts.service";
+import { preparePagedGet } from "@/lib/service/paginated.service";
 import { CreateAccountSchema } from "@/lib/types/accounts";
 import { createResponse } from "@/lib/types/base.response";
 import { AxiosError } from "axios";
 import { NextResponse } from "next/server";
 
-const getPageAndPageSize = (url: URL) => {
-    const { searchParams } = url;
-
-    let page = searchParams.get("page");
-    let pageSize = searchParams.get("pageSize");
-
-    if (!page || Number.isNaN(page)) {
-        page = '0';
-    }
-
-    if (!pageSize || Number.isNaN(pageSize)) {
-        pageSize = '20';
-    }
-
-    return {
-        page: Number(page),
-        pageSize: Number(pageSize)
-    }
-}
-
 export async function GET(request: Request) {
-    const url = new URL(request.url);
+    const f = await preparePagedGet(getPaginatedAccounts, request);
 
-    const { page, pageSize } = getPageAndPageSize(url);
-
-    try {
-        const response = await getPaginatedAccounts({
-            page,
-            pageSize
-        });
-
-        return NextResponse.json(response, {
-            status: 200
-        });
-    } catch (err: unknown) {
-        if (err instanceof NotAuthorizedError) {
-            return NextResponse.json(createResponse('Not authorized', 401), {
-                status: 401
-            })
-        }
-    }
+    return f;
 }
 
 export async function POST(request: Request) {

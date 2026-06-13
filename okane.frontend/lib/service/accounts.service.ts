@@ -1,7 +1,6 @@
 import { api } from "../api";
 import { Account, CreateAccountFormSchema } from "../types/accounts";
 import { BaseResponse } from "../types/base.response";
-import { PaginationFormSchema } from "../types/pagination";
 import { createHeaders } from "./retrieve-token.service";
 
 export type AccountResponse = BaseResponse<{
@@ -11,10 +10,10 @@ export type AccountResponse = BaseResponse<{
     pageIndex: number
 }>
 
-export const getPaginatedAccounts = async (data: PaginationFormSchema) => {
+export const getPaginatedAccounts = async (page: number, pageSize: number) => {
     const headers = await createHeaders();
 
-    const response = await api.get<AccountResponse>(`/account?page=${data.page}&pageSize=${data.pageSize}`, {
+    const response = await api.get<AccountResponse>(`/account?page=${page}&pageSize=${pageSize}`, {
         headers
     });
 
