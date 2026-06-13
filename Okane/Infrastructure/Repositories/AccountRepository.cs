@@ -53,4 +53,10 @@ public class AccountRepository(OkaneDbContext okaneDbContext) : IAccountReposito
 
         return account;
     }
+
+    public async Task<IEnumerable<Account>> SearchAsync(string query, CancellationToken cancellationToken)
+    {
+        return await okaneDbContext.Accounts.Where(a => EF.Functions.ILike(a.Name, $"%{query}%"))
+            .ToListAsync(cancellationToken);
+    }
 }

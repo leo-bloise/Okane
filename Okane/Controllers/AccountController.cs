@@ -76,6 +76,31 @@ public class AccountController(IAccountService service): ControllerBase
         return Ok(ResponsesFacade.Ok("Account retrieved successfully", response));
     }
 
+    [HttpGet("search")]
+    public async Task<IActionResult> SearchAccount([FromQuery] string query, CancellationToken cancellationToken)
+    {
+        User? user = GetUser();
+
+        if(user is null) throw new UnauthorizedAccessException();
+
+        IEnumerable<Account> accounts = await service.GetAccountsAsync(query, cancellationToken);
+
+        Dictionary<string, object?> response = new Dictionary<string, object?>()
+        {
+            {"results", accounts.Select(x =>
+                {
+                    return new {
+                        id = x.Id,
+                        name = x.Name,
+                        description = x.Description
+                    };
+                }) 
+            }
+        };
+
+        return Ok(ResponsesFacade.Ok("Search result", response));
+    }
+
     [HttpPost]
     public async Task<IActionResult> CreateAccountAsync([FromBody] CreateAccountRequest request, CancellationToken cancellationToken)
     {

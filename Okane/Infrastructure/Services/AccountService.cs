@@ -29,4 +29,9 @@ public class AccountService(IAccountRepository repository) : IAccountService
     {
         return repository.GetPageAsync(userId, request.Page, request.PageSize, cancellationToken);
     }
+
+    public Task<IEnumerable<Account>> GetAccountsAsync(string name, CancellationToken cancellationToken)
+    {
+        return repository.SearchAsync(name, cancellationToken);
+    }
 }

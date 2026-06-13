@@ -6,6 +6,7 @@ namespace Okane.Accounts.Services;
 
 public interface IAccountService
 {
+    public Task<IEnumerable<Account>> GetAccountsAsync(string name, CancellationToken cancellationToken);
     public Task<Account> CreateAccountAsync(ICreateAccountRequest request, CancellationToken cancellationToken);
 
     public Task<Page<Account>> GetAccountPageAsync(IPageRequest request, int userId, CancellationToken cancellationToken);

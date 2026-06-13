@@ -18,6 +18,8 @@ export default function proxy(request: NextRequest) {
 
     const sessionCookie = request.cookies.get("session");
 
+    console.log('session cookie', sessionCookie, 'pathname', pathname);
+
     if (isPublicRoute && !sessionCookie) {
         return NextResponse.next();
     }

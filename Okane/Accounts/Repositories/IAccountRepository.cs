@@ -5,6 +5,8 @@ namespace Okane.Accounts.Repositories;
 
 public interface IAccountRepository
 {
+    public Task<IEnumerable<Account>> SearchAsync(string query, CancellationToken cancellationToken);
+
     public Task<Account> SaveAccountAsync(Account account, CancellationToken cancellationToken);
 
     public Task<bool> ExistsByNameAsync(string name, int userId, CancellationToken cancellationToken);
