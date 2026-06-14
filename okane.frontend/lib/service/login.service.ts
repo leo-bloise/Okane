@@ -1,10 +1,13 @@
 import { cookies } from "next/headers";
-import { api } from "../api";
+import { getApi } from "../api";
 import { LoginFormSchema } from "../types/login";
 import { encrypt } from "../utils.server";
 
 export default async function login(data: LoginFormSchema) {
+    const api = await getApi();
+    
     const response = await api.post('/auth/login', data);
+    
     const cookieStore = await cookies();
 
     if (response.status != 200) throw new Error('Response was not OK');

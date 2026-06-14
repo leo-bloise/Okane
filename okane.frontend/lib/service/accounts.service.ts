@@ -1,53 +1,28 @@
-import { api } from "../api";
+import { getApi } from "../api";
 import { Account, CreateAccountFormSchema } from "../types/accounts";
 import { BaseResponse } from "../types/base.response";
-import { createHeaders } from "./retrieve-token.service";
-
-export type AccountResponse = BaseResponse<{
-    items: Account[],
-    totalPages: number,
-    pageSize: number,
-    pageIndex: number
-}>
+import { Paged } from "../types/paged";
 
 export const getPaginatedAccounts = async (page: number, pageSize: number) => {
-    const headers = await createHeaders();
+    const api = await getApi();
 
-    const response = await api.get<AccountResponse>(`/account?page=${page}&pageSize=${pageSize}`, {
-        headers
-    });
-
-    if(response.status != 200) {
-        throw new Error(response.statusText);
-    }
+    const response = await api.get<Paged<Account>>(`/account?page=${page}&pageSize=${pageSize}`);
 
     return response.data;
 }
 
 export const createAccount = async (data: CreateAccountFormSchema) => {
-    const headers = await createHeaders();
+    const api = await getApi();
 
-    const response = await api.post(`/account`, data, {
-        headers
-    });
-
-    if(response.status != 201) {
-        throw new Error(response.statusText);
-    }
+    const response = await api.post<BaseResponse<Account>>(`/account`, data);
 
     return response.data;
 }
 
 export const searchAccounts = async (data: string) => {
-    const headers = await createHeaders();
+    const api = await getApi();
 
-    const response = await api.get(`/account/search?query=${data}`, {
-        headers
-    });
-
-    if(response.status != 200) {
-        throw new Error(response.statusText);
-    }
+    const response = await api.get(`/account/search?query=${data}`);
 
     return response.data;
 }

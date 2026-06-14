@@ -1,8 +1,10 @@
-import { api } from "../api";
+import { getApi } from "../api";
 import { RegisterFormSchema } from "../types/register";
 import login from "./login.service";
 
 export default async function register(data: RegisterFormSchema) {
+    const api = await getApi();
+    
     const response = await api.post('/auth/register', data);
 
     if (response.status != 201) {
