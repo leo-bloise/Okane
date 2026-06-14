@@ -41,7 +41,7 @@ public class AccountRepository(OkaneDbContext okaneDbContext) : IAccountReposito
             Items = page,
             TotalPages = (int)Math.Ceiling(totalAccounts / (double)pageSize),
             PageSize = pageSize,
-            PageIndex = pageIndex
+              PageIndex = pageIndex
         };
     }
 

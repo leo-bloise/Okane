@@ -1,3 +1,4 @@
+import CreateTransactionForm from "@/components/custom/create-transaction-form";
 import TransactionsSection from "@/components/custom/transactions";
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
 import { fetchFromServer } from "@/lib/api.server-component";
@@ -52,7 +53,7 @@ export default async function Page({ searchParams }: PageProps) {
                         <DrawerDescription>Register previously occured transactions</DrawerDescription>
                     </DrawerHeader>
                     <div className="p-4">
-                        
+                        <CreateTransactionForm />
                     </div>
                 </DrawerContent>
             </Drawer>
