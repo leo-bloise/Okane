@@ -21,7 +21,7 @@ export default function TransactionTable({ transactions }: { transactions: Trans
                     <TableCell>{t.description}</TableCell>
                     <TableCell>{t.fromAccountId}</TableCell>
                     <TableCell>{t.toAccountId}</TableCell>
-                    <TableCell>{t.occured_at}</TableCell>
+                    <TableCell>{t.occuredAt}</TableCell>
                 </TableRow>
             ))}
         </TableBody>

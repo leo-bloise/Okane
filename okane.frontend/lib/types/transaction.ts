@@ -6,7 +6,7 @@ export type Transaction = {
     description: string;
     fromAccountId: number;
     toAccountId: number;
-    occured_at: string;
+    occuredAt: string;
 };
 
 export const CreateTransactionSchema = z.object({
@@ -14,5 +14,7 @@ export const CreateTransactionSchema = z.object({
     description: z.string(),
     fromAccountId: z.number(),
     toAccountId: z.number(),
-    occured_at: z.date()
+    occuredAt: z.any()
 });
+
+export type CreateTransactionFormSchema = z.infer<typeof CreateTransactionSchema>;

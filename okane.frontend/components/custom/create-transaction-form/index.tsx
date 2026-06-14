@@ -1,7 +1,7 @@
 'use client';
 
 import { Account } from "@/lib/types/accounts";
-import { CreateTransactionSchema } from "@/lib/types/transaction";
+import { CreateTransactionFormSchema, CreateTransactionSchema } from "@/lib/types/transaction";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
@@ -10,8 +10,28 @@ import CreateTransactionFormView from "./CreateTransactionFormView";
 export default function CreateTransactionForm() {
     const [loading, setLoading] = useState<boolean>(false);
 
-    const onSubmit = (data: any) => {
-        console.log("Form submitted:", data);
+    const onSubmit = async (data: CreateTransactionFormSchema) => {
+        setLoading(true);
+
+        const headers = new Headers();
+
+        headers.append('Content-Type', 'application/json');
+
+        try {
+            const response = await fetch('/transactions/api', {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(data)
+            });
+
+            if(!response.ok) {
+                console.log(await response.json());
+            }
+        } catch(error: unknown) {
+            console.error(error);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const merger = useCallback((oldItems: Account[], newItems: Account[]) => {
@@ -45,17 +65,18 @@ export default function CreateTransactionForm() {
         handleSubmit,
         formState: {
             errors
-        }
+        },
+        setValue
     } = useForm({
         resolver: zodResolver(CreateTransactionSchema),
         defaultValues: {
             amount: 0,
             description: '',
             fromAccountId: 0,
-            occured_at: new Date(),
+            occuredAt: new Date(),
             toAccountId: 0
         }
-    });
+    });    
 
     return (
         <CreateTransactionFormView
@@ -67,6 +88,7 @@ export default function CreateTransactionForm() {
             onSubmit={onSubmit}
             accountSource={source}
             merger={merger}
+            setValue={setValue}
         />
     );
 }
