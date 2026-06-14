@@ -2,7 +2,8 @@ import CreateTransactionForm from "@/components/custom/create-transaction-form";
 import TransactionsSection from "@/components/custom/transactions";
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
 import { fetchFromServer } from "@/lib/api.server-component";
-import { TransactionResponse } from "@/lib/service/transaction.service";
+import { Paged } from "@/lib/types/paged";
+import { Transaction } from "@/lib/types/transaction";
 import { Plus } from "lucide-react";
 
 async function fetchTransactions(page: number, pageSize: number) {
@@ -19,7 +20,7 @@ async function fetchTransactions(page: number, pageSize: number) {
         throw new Error('Failed to fetch transactions');
     }
 
-    return response.json() as Promise<TransactionResponse>
+    return response.json() as Promise<Paged<Transaction>>
 }
 
 type PageProps = {
