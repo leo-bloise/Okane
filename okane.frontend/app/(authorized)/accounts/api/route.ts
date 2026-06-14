@@ -1,14 +1,18 @@
 import { createAccount, getPaginatedAccounts } from "@/lib/service/accounts.service";
+import handleServerErrors from "@/lib/service/error-handler";
 import { preparePagedGet } from "@/lib/service/paginated.service";
 import { CreateAccountSchema } from "@/lib/types/accounts";
 import { createResponse } from "@/lib/types/base.response";
-import { AxiosError } from "axios";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
-    const f = await preparePagedGet(getPaginatedAccounts, request);
+    try {
+        const f = await preparePagedGet(getPaginatedAccounts, request);
 
-    return f;
+        return f;
+    } catch(exception: unknown) {
+        return handleServerErrors(exception);
+    }
 }
 
 export async function POST(request: Request) {
@@ -28,19 +32,11 @@ export async function POST(request: Request) {
         }
 
         const responseData = await createAccount(data);
-        
+
         return NextResponse.json(responseData, {
             status: 201
         });
     } catch (exception: unknown) {
-        if(exception instanceof AxiosError) {
-            switch(exception.status) {
-                case 422:
-                    return NextResponse.json(exception.response?.data, {
-                        status: exception.response?.data.status
-                    });
-            }
-        }
-        console.error(exception);
+        return handleServerErrors(exception);
     }
 }
