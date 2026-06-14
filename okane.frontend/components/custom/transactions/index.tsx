@@ -17,13 +17,13 @@ export default function TransactionsSection({ transactions, currentPage, totalPa
             totalPages={totalPages}
             pageSize={pageSize}
             currentLinkFactory={(index, pageSize) => {
-                return `/transaction?page=${index - 1}&pageSize=${pageSize}`;
+                return `/transactions?page=${index - 1}&pageSize=${pageSize}`;
             }}
             nextLinkFactory={(curr, pageSize) => {
-                return `/transaction?page=${curr + 1}&pageSize=${pageSize}`
+                return `/transactions?page=${curr + 1}&pageSize=${pageSize}`
             }}
             previousLinkFactory={(currentPage, pageSize) => {
-                return `/transaction?page=${currentPage - 1}&pageSize=${pageSize}`
+                return `/transactions?page=${currentPage - 1}&pageSize=${pageSize}`
             }}
         />
     </section> : <></>;
