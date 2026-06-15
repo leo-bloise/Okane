@@ -15,7 +15,13 @@ public class AccountService(IAccountRepository repository) : IAccountService
         Account account = new(request.Name, request.Description, request.User.Id);
 
         if (await repository.ExistsByNameAsync(account.Name, account.UserId, cancellationToken))
-            throw new DomainException($"Account with name {account.Name} already exists", 422);
+        {
+            throw new DetailedException("Invalid data provided", 422, new Dictionary<string, object?>()
+            {
+                { "name", $"Account with name {account.Name} already taken" }
+            }
+            );
+        }
 
         return await repository.SaveAccountAsync(account, cancellationToken);
     }

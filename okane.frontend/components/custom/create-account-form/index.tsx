@@ -6,6 +6,7 @@ import { CreateAccountFormSchema, CreateAccountSchema } from "@/lib/types/accoun
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { BaseResponse } from "@/lib/types/base.response";
 
 export default function CreateAccountForm() {
     const [loading, setLoading] = useState<boolean>(false);
@@ -41,11 +42,15 @@ export default function CreateAccountForm() {
             });
 
             if (!response.ok) {
-                const data = await response.json();
-                setError('name', {
-                    message: data.message,
-                    type: 'required'
-                });
+                const data = await response.json() as BaseResponse<{
+                    [key: string]: string
+                }>;
+
+                Object.keys(data.details!).forEach(k => {
+                    setError(k as "name" | "description", {
+                        message: data.details![k],
+                    });
+                })
                 return;
             }
 

@@ -79,10 +79,11 @@ public class Program
 
         builder
             .Services
-            .AddExceptionHandler<DomainExceptionHandler>();
+            .AddExceptionHandler<DetailedExceptionHandler>();
+
         builder
             .Services
-            .AddExceptionHandler<DetailedExceptionHandler>();
+            .AddExceptionHandler<DomainExceptionHandler>();
 
         builder.Services.AddProblemDetails();
 
