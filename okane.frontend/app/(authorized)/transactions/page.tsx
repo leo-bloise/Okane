@@ -47,7 +47,7 @@ export default async function Page({ searchParams }: PageProps) {
     let transactions: Transaction[] = [];
     let totalPages = 0;
 
-    if(!error) {
+    if (!error) {
         const payload = await data;
         transactions = payload?.details?.items ?? [];
         totalPages = payload?.details?.totalPages ?? 0;
@@ -71,14 +71,19 @@ export default async function Page({ searchParams }: PageProps) {
                 </DrawerContent>
             </Drawer>
         </header>
-        <TransactionsSection
-            transactions={transactions}
-            currentPage={page}
-            totalPages={totalPages}
-            pageSize={pageSize}
-        />
-        {transactions.length == 0 && <section className="flex flex-col items-center">
-            <h2 className="text-md">No transactions created</h2>
-        </section>}
+
+        {error && <div>There was an error loading the accounts. Please, try again later</div>}
+        {!error && <>
+            {transactions.length != 0 && <TransactionsSection
+                transactions={transactions}
+                currentPage={page}
+                totalPages={totalPages}
+                pageSize={pageSize}
+            />}
+            {transactions.length == 0 && <section className="flex flex-col items-center">
+                <h2 className="text-md">No transactions created</h2>
+            </section>}
+        </>}
+
     </div>;
 }
