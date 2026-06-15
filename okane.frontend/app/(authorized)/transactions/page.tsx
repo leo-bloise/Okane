@@ -17,10 +17,16 @@ async function fetchTransactions(page: number, pageSize: number) {
     );
 
     if (!response.ok) {
-        throw new Error('Failed to fetch transactions');
+        return {
+            data: undefined,
+            error: true
+        }
     }
 
-    return response.json() as Promise<Paged<Transaction>>
+    return {
+        data: response.json() as Promise<Paged<Transaction>>,
+        error: false
+    }
 }
 
 type PageProps = {
@@ -36,10 +42,16 @@ export default async function Page({ searchParams }: PageProps) {
     const page = Number(params.page ?? 0);
     const pageSize = Number(params.pageSize ?? 20);
 
-    const { details } = await fetchTransactions(page, pageSize);
+    const { data, error } = await fetchTransactions(page, pageSize);
 
-    const transactions = details!.items
-    const totalPages = details!.totalPages
+    let transactions: Transaction[] = [];
+    let totalPages = 0;
+
+    if(!error) {
+        const payload = await data;
+        transactions = payload?.details?.items ?? [];
+        totalPages = payload?.details?.totalPages ?? 0;
+    }
 
     return <div className="min-h-full flex flex-col gap-y-5">
         <header className="flex items-center">
