@@ -4,6 +4,7 @@ import { preparePagedGet } from "@/lib/service/paginated.service";
 import { createTransaction, getPaginatedTransactions } from "@/lib/service/transaction.service";
 import { createResponse } from "@/lib/types/base.response";
 import { CreateTransactionSchema } from "@/lib/types/transaction";
+import { parseSafe } from "@/lib/utils.server";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
@@ -18,13 +19,11 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
     try {
-        const body = await request.json();
-
-        const {
+        const { 
             success,
             data,
             error
-        } = CreateTransactionSchema.safeParse(body);
+        } = await parseSafe(request, CreateTransactionSchema);
 
         if (!success) {
             return NextResponse.json(createResponse('Invalid data provided', 422, zodToDetailsAdapter(error)), {

@@ -3,6 +3,8 @@ import {
   createCipheriv,
   createDecipheriv,
 } from "crypto";
+import { ZodObject } from "zod";
+import { $ZodType, $ZodTypeInternals } from "zod/v4/core";
 
 const ALGORITHM = "aes-256-gcm";
 const KEY = Buffer.from(process.env.ENCRYPTION_KEY!, "hex");
@@ -54,4 +56,10 @@ export function decrypt(token: string): string {
   ]);
 
   return decrypted.toString("utf8");
+}
+
+export async function parseSafe<T extends Readonly<{ [k: string]: $ZodType<unknown, unknown, $ZodTypeInternals<unknown, unknown>>; }>>(request: Request, schema: ZodObject<T>)  {
+  const body = await request.json();
+
+  return schema.safeParse(body);
 }
