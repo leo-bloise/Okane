@@ -1,3 +1,4 @@
+import { zodToDetailsAdapter } from "@/lib/adapters/axios-to-details-adpater";
 import handleServerErrors from "@/lib/service/error-handler";
 import { preparePagedGet } from "@/lib/service/paginated.service";
 import { createTransaction, getPaginatedTransactions } from "@/lib/service/transaction.service";
@@ -26,7 +27,7 @@ export async function POST(request: Request) {
         } = CreateTransactionSchema.safeParse(body);
 
         if (!success) {
-            return NextResponse.json(createResponse('Invalid data provided', 422, error.flatten()), {
+            return NextResponse.json(createResponse('Invalid data provided', 422, zodToDetailsAdapter(error)), {
                 status: 422
             });
         }
