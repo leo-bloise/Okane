@@ -22,10 +22,15 @@ export async function getTokenFromCookies() {
 
 export async function createHeaders() {
     const h = new AxiosHeaders();
-    const token = await getTokenFromCookies();
-
+    
     h.setContentType('application/json');
-    h.setAuthorization(`Bearer ${token}`);
+
+    try {
+        const token = await getTokenFromCookies();
+        h.setAuthorization(`Bearer ${token}`);
+    } catch(error: unknown) {
+        console.error(error);
+    }
 
     return h;
 }
