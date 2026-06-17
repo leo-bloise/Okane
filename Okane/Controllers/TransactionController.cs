@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Okane.Accounts;
 using Okane.Authentication;
 using Okane.Core.Data;
 using Okane.Infrastructure.Requests;
