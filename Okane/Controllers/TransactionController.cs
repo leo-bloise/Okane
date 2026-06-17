@@ -44,7 +44,7 @@ public class TransactionController(ILedgerService ledgerService) : ControllerBas
             { "description", transaction.Description },
             { "fromAccountId", transaction.FromAccountId },
             { "toAccountId", transaction.ToAccountId },
-            { "occured_at", transaction.OccuredAt }
+            { "occuredAt", transaction.OccuredAt }
         };
     }
 

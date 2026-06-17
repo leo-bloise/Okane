@@ -2,7 +2,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Transaction } from "@/lib/types/transaction";
 
 export default function TransactionTable({ transactions }: { transactions: Transaction[] }) {
-    const formatDate = (date: string) => new Date(date);
+    const formatDate = (date: string) => {
+        const d = new Date(date);
+        return new Intl.DateTimeFormat().format(d);
+    }
     
     return <Table>
         <TableHeader>
@@ -23,7 +26,7 @@ export default function TransactionTable({ transactions }: { transactions: Trans
                     <TableCell>{t.description}</TableCell>
                     <TableCell>{t.fromAccountId}</TableCell>
                     <TableCell>{t.toAccountId}</TableCell>
-                    <TableCell>{formatDate(t.occuredAt).toDateString()}</TableCell>
+                    <TableCell>{formatDate(t.occuredAt)}</TableCell>
                 </TableRow>
             ))}
         </TableBody>
