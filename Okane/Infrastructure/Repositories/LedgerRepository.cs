@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Okane.Accounts;
 using Okane.Core.Data;
 using Okane.Ledger;
 using Okane.Ledger.Repositories;

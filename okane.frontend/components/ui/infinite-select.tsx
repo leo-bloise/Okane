@@ -1,128 +1,227 @@
 'use client';
 
 import { ArrowDown } from "lucide-react";
-import { MouseEventHandler, ReactNode, UIEventHandler, useCallback, useEffect, useState } from "react";
+import {
+    MouseEventHandler,
+    ReactNode,
+    UIEventHandler,
+    useCallback,
+    useEffect,
+    useRef,
+    useState
+} from "react";
 import { Spinner } from "./spinner";
 
 type SelectState<T> = {
     items: T[];
-    selectedItemIndex: number;
-    getSelectedItem: () => T | undefined;
     nextToken: string;
-}
+};
 
-type Props<T> = {
-    itemToLiAdapter: (data: T, onClickListener: MouseEventHandler<HTMLLIElement>, index: number, selectedIndex: number) => ReactNode;
+type Props<T, TValue> = {
+    value?: TValue;
+
+    onChange?: (value: TValue) => void;
+
+    getValue(item: T): TValue;
+
+    itemToLiAdapter: (
+        data: T,
+        onClickListener: MouseEventHandler<HTMLLIElement>,
+        index: number,
+        selected: boolean
+    ) => ReactNode;
+
     placeholderText?: string;
-    source: (continuationToken: string) => Promise<{ items: T[], continuationToken: string }>;
-    getDisplay(value: T): string;
-    merger: (oldItems: T[], newItems: T[]) => T[];
-}
 
-export default function InifiniteSelect<T>({ itemToLiAdapter, placeholderText = "Select an item", source, merger, getDisplay }: Props<T>) {
-    const [loading, setLoading] = useState<boolean>(false);
+    source: (
+        continuationToken: string
+    ) => Promise<{
+        items: T[];
+        continuationToken: string;
+    }>;
+
+    getDisplay(value: T): string;
+
+    merger: (
+        oldItems: T[],
+        newItems: T[]
+    ) => T[];
+};
+
+export default function InfiniteSelect<T, TValue>({
+    itemToLiAdapter,
+    placeholderText = "Select an item",
+    source,
+    merger,
+    getDisplay,
+    getValue,
+    onChange,
+    value
+}: Props<T, TValue>) {
+    const [loading, setLoading] = useState(false);
+
+    const rootRef = useRef<HTMLDivElement>(null);
+
+    const [open, setOpen] = useState(false);
 
     const [state, setState] = useState<SelectState<T>>({
-        items: [] as T[],
-        selectedItemIndex: -1,
-        getSelectedItem(this: {
-            items: T[],
-            selectedItemIndex: number
-        }) {
-            if (this.selectedItemIndex == -1) return undefined;
-
-            return this.items[this.selectedItemIndex] as T;
-        },
+        items: [],
         nextToken: ''
     });
 
-    const getMoreItems = useCallback(async (ignoreEmpty: boolean = true) => {
-        setLoading(true);
-        try {
-            if(ignoreEmpty && state.nextToken === '') return;
+    const getMoreItems = useCallback(
+        async (ignoreEmpty = true) => {
+            setLoading(true);
 
-            const { continuationToken, items } = await source(state.nextToken);
+            try {
+                if (ignoreEmpty && state.nextToken === '') {
+                    return;
+                }
 
-            setState(old => ({
-                ...old,
-                items: merger(old.items, items),
-                nextToken: continuationToken
-            }));
-        } finally {
-            setLoading(false);
-        }
-    }, [state.nextToken]);
+                const {
+                    continuationToken,
+                    items
+                } = await source(state.nextToken);
 
-    const onScroll: UIEventHandler<HTMLDivElement> = useCallback((event) => {
-        event.preventDefault();
-        event.stopPropagation();
+                setState(old => ({
+                    ...old,
+                    items: merger(old.items, items),
+                    nextToken: continuationToken
+                }));
+            } finally {
+                setLoading(false);
+            }
+        },
+        [state.nextToken, source, merger]
+    );
 
-        const div = (event.target as HTMLDivElement);
+    const onScroll: UIEventHandler<HTMLDivElement> = useCallback(
+        event => {
+            event.preventDefault();
 
-        const atBottom = div.scrollTop + div.clientHeight >= div.scrollHeight;
+            const div = event.currentTarget;
 
-        if(atBottom && !loading) {
-            getMoreItems();
-        }
-    }, [loading]);
+            const atBottom =
+                div.scrollTop + div.clientHeight >= div.scrollHeight;
+
+            if (atBottom && !loading) {
+                getMoreItems();
+            }
+        },
+        [loading, getMoreItems]
+    );
 
     useEffect(() => {
         getMoreItems(false);
     }, []);
 
-    const onClickSelect: MouseEventHandler<HTMLDivElement> = (event) => {
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (
+                rootRef.current &&
+                !rootRef.current.contains(event.target as Node)
+            ) {
+                setOpen(false);
+            }
+        };
+
+        document.addEventListener(
+            "mousedown",
+            handleClickOutside
+        );
+
+        return () => {
+            document.removeEventListener(
+                "mousedown",
+                handleClickOutside
+            );
+        };
+    }, []);
+
+    const onClickSelect: MouseEventHandler<HTMLDivElement> = event => {
         event.preventDefault();
-        event.stopPropagation();
 
-        const parent = (event.target as HTMLDivElement).parentElement as HTMLDivElement;
+        setOpen(old => !old);
+    };
 
-        if (parent.classList.contains('open')) {
-            parent.classList.remove('open');
+    const onClickLi: MouseEventHandler<HTMLLIElement> = event => {
+        const index = Number(
+            event.currentTarget.dataset.index
+        );
+
+        if (
+            Number.isNaN(index) ||
+            index < 0 ||
+            index >= state.items.length
+        ) {
             return;
         }
 
-        parent.classList.add('open');
+        const item = state.items[index];
+
+        onChange?.(getValue(item));
+
+        setOpen(false);
     };
 
-    const onClickLi: MouseEventHandler<HTMLLIElement> = (event) => {
-        const index = event.currentTarget.dataset.index;
-
-        if(index === undefined || index === null) {
-            throw new Error('attach the index desired to the option.')
+    const getPlaceholderText = () => {
+        if (value == null) {
+            return placeholderText;
         }
 
-        const i = Number(index);
+        const selectedItem = state.items.find(
+            item => getValue(item) === value
+        );
 
-        if(i < 0 || i >= state.items.length || Number.isNaN(i) || !Number.isInteger(i)) {
-            throw new Error(`Invalid index selected. It must be between 0 and ${state.items.length}`)
-        }
-        
-        setState(old => ({
-            ...old,
-            selectedItemIndex: i
-        }));
-    };
-
-    const getPlaceholderText = useCallback(() => {
-        const selectedItem = state.getSelectedItem();
-
-        if(selectedItem === undefined) {
+        if (!selectedItem) {
             return placeholderText;
         }
 
         return getDisplay(selectedItem);
-    }, [state.selectedItemIndex, getDisplay]);
+    };
 
-    return <div className="group flex flex-col gap-y-2">
-        <div className="cursor-pointer h-1/12 max-h-50 border rounded-md overflow-y-auto p-2 flex items-center justify-between" onClick={onClickSelect}>
-            <span>{getPlaceholderText()}</span>
-            <ArrowDown className="group-[.open]:rotate-180 transition-all" size='16' color="gray" />
+    return (
+        <div
+            ref={rootRef}
+            className="flex flex-col gap-y-2"
+        >
+            <div
+                className="cursor-pointer border rounded-md p-2 flex items-center justify-between"
+                onClick={onClickSelect}
+            >
+                <span>{getPlaceholderText()}</span>
+
+                <ArrowDown
+                    className={`transition-all ${
+                        open ? "rotate-180" : ""
+                    }`}
+                    size={16}
+                    color="gray"
+                />
+            </div>
+
+            <div
+                className={`transition-all overflow-y-auto border rounded-md ${
+                    open
+                        ? "opacity-100 max-h-50"
+                        : "opacity-0 max-h-0 border-transparent"
+                }`}
+                onScroll={onScroll}
+            >
+                <ul className="[&>li]:hover:bg-foreground/25 [&>li]:cursor-pointer [&>li]:p-2 [&>li.active]:bg-foreground/30">
+                    {state.items.map((item, index) =>
+                        itemToLiAdapter(
+                            item,
+                            onClickLi,
+                            index,
+                            value !== undefined &&
+                                value === getValue(item)
+                        )
+                    )}
+
+                    {loading && <Spinner />}
+                </ul>
+            </div>
         </div>
-        <div className="transition-all max-h-0 opacity-0 group-[.open]:opacity-100 group-[.open]:max-h-50 group-[.open]:h-1/12 border rounded-md overflow-y-auto" onScroll={onScroll}>
-            <ul className="[&>li]:hover:bg-foreground/25 [&>li]:cursor-pointer [&>li]:p-2 [&>li.active]:bg-foreground">
-                {state.items.map((item, index) => itemToLiAdapter(item, onClickLi, index, state.selectedItemIndex))}
-                {loading && <Spinner />}
-            </ul>
-        </div>
-    </div>
+    );
 }
