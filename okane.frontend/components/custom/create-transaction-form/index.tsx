@@ -9,42 +9,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import CreateTransactionFormView from "./CreateTransactionFormView";
+import { useRouter } from "next/navigation";
 
 export default function CreateTransactionForm() {
     const [loading, setLoading] = useState(false);
-
-    const onSubmit = async (
-        data: CreateTransactionFormSchema
-    ) => {
-        setLoading(true);
-        const headers = new Headers();
-
-        headers.append(
-            "Content-Type",
-            "application/json"
-        );
-
-        try {
-            const response = await fetch(
-                "/transactions/api",
-                {
-                    method: "POST",
-                    headers,
-                    body: JSON.stringify(data)
-                }
-            );
-
-            if (!response.ok) {
-                console.log(
-                    await response.json()
-                );
-            }
-        } catch (error: unknown) {
-            console.error(error);
-        } finally {
-            setLoading(false);
-        }
-    };
+    const router = useRouter();
 
     const merger = useCallback(
         (
@@ -109,11 +78,10 @@ export default function CreateTransactionForm() {
 
                 continuationToken:
                     totalPages <=
-                    Number(page) + 1
+                        Number(page) + 1
                         ? ""
-                        : `?page=${
-                              Number(page) + 1
-                          }&pageSize=${pageSize}`
+                        : `?page=${Number(page) + 1
+                        }&pageSize=${pageSize}`
             };
         },
         []
@@ -123,7 +91,9 @@ export default function CreateTransactionForm() {
         register,
         control,
         handleSubmit,
-        formState: { errors }
+        formState: { errors, },
+        setError,
+        reset
     } =
         useForm<CreateTransactionFormSchema>({
             resolver: zodResolver(
@@ -142,6 +112,48 @@ export default function CreateTransactionForm() {
                 occuredAt: new Date()
             }
         });
+
+    const onSubmit = async (
+        data: CreateTransactionFormSchema
+    ) => {
+        setLoading(true);
+        const headers = new Headers();
+
+        headers.append(
+            "Content-Type",
+            "application/json"
+        );
+
+        try {
+            const response = await fetch(
+                "/transactions/api",
+                {
+                    method: "POST",
+                    headers,
+                    body: JSON.stringify(data)
+                }
+            );
+
+            if (!response.ok && response.status == 422) {
+                const data = await response.json();
+                const errors = data.details;
+
+                for (const key in errors) {
+                    const errorMessage = errors[key];
+                    setError(key as any, {
+                        message: errorMessage
+                    });
+                }
+                return;
+            }
+            reset();
+            router.refresh();
+        } catch (error: unknown) {
+            console.error(error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <CreateTransactionFormView
