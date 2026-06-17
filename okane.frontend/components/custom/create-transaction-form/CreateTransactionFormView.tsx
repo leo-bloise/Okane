@@ -153,14 +153,17 @@ export default function CreateTransactionFormView({
 
             <Field>
                 <FieldLabel>Occured At</FieldLabel>
-
                 <Input
-                    type="datetime-local"
+                    type="date"
                     disabled={loading}
                     {...register("occuredAt", {
                         valueAsDate: true
                     })}
                 />
+
+                <FieldError>
+                    {errors.toAccountId?.message}
+                </FieldError>
             </Field>
 
             <Field>

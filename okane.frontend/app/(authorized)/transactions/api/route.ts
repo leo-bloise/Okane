@@ -37,6 +37,6 @@ export async function POST(request: Request) {
             status: 201
         });
     } catch (exception: unknown) {
-        handleServerErrors(exception);
+        return handleServerErrors(exception);
     }
 }

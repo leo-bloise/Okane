@@ -2,6 +2,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Transaction } from "@/lib/types/transaction";
 
 export default function TransactionTable({ transactions }: { transactions: Transaction[] }) {
+    const formatDate = (date: string) => new Date(date);
+    
     return <Table>
         <TableHeader>
             <TableRow>
@@ -21,7 +23,7 @@ export default function TransactionTable({ transactions }: { transactions: Trans
                     <TableCell>{t.description}</TableCell>
                     <TableCell>{t.fromAccountId}</TableCell>
                     <TableCell>{t.toAccountId}</TableCell>
-                    <TableCell>{t.occuredAt}</TableCell>
+                    <TableCell>{formatDate(t.occuredAt).toDateString()}</TableCell>
                 </TableRow>
             ))}
         </TableBody>

@@ -17,7 +17,6 @@ export default function CreateTransactionForm() {
         data: CreateTransactionFormSchema
     ) => {
         setLoading(true);
-
         const headers = new Headers();
 
         headers.append(
