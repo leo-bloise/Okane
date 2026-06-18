@@ -1,0 +1,10 @@
+**/.classpath
+**/.dockerignore
+**/.git
+**/.gitignore
+**/bin
+**/obj
+**/.vs
+**/node_modules
+**/npm-debug.log
+README.md
