@@ -7,10 +7,12 @@ using Okane.Authentication.Services;
 using Okane.Infrastructure;
 using Okane.Infrastructure.ExceptionHandler;
 using Okane.Infrastructure.Options;
+using Okane.Infrastructure.Reports.Generators;
 using Okane.Infrastructure.Repositories;
 using Okane.Infrastructure.Services;
 using Okane.Ledger.Repositories;
 using Okane.Ledger.Services;
+using Okane.Reports.Generators;
 
 namespace Okane;
 
@@ -76,6 +78,8 @@ public class Program
             .AddScoped<IAccountService, AccountService>();
         builder.Services
             .AddScoped<ILedgerService, LedgerService>();
+        builder.Services
+            .AddScoped<IDashboardReportGenerator, DashboardReportGenerator>();
 
         builder
             .Services
