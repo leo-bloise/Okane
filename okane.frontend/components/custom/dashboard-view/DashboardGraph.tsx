@@ -19,8 +19,7 @@ export default function DashboardGraph({ report }: Props) {
         style: 'currency',
         currency: 'BRL'
     });
-    const formatterDate = new Intl.DateTimeFormat();
-    console.log(adjusted);
+    const formatterDate = new Intl.DateTimeFormat();    
     return <div className="w-full flex flex-col items-center justify-center h-full">
         <h2>Daily Balance</h2>
         <LineChart style={{ width: '100%', aspectRatio: 1.618, maxWidth: 600 }} responsive data={adjusted}>
