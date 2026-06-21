@@ -32,7 +32,7 @@ export default async function Page() {
 
     if(!details) throw new Error('no details');
 
-    return <div className="p-2">
+    return <div className="p-2 flex flex-col h-full">
         <section className="flex gap-x-10">
             <CardIndicator
                 className="flex-1" 
@@ -55,7 +55,7 @@ export default async function Page() {
                 red
             />
         </section>
-        <section className="flex items-center justify-center">
+        <section className="flex items-center justify-center flex-1">
             <DashboardGraph 
                 report={details}
             />
