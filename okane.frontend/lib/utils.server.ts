@@ -7,7 +7,7 @@ import { ZodObject } from "zod";
 import { $ZodType, $ZodTypeInternals } from "zod/v4/core";
 
 const ALGORITHM = "aes-256-gcm";
-const KEY = Buffer.from(process.env.ENCRYPTION_KEY!, "hex");
+const KEY = Buffer.from(process.env.ENCRYPTION_KEY ?? 'change-me', "hex");
 
 export function encrypt(text: string): string {
   const iv = randomBytes(12);

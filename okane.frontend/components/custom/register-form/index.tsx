@@ -17,7 +17,8 @@ export default function RegisterForm() {
         handleSubmit,
         formState: {
             errors
-        }
+        },
+        setError
     } = useForm<RegisterFormSchema>({
         resolver: zodResolver(RegisterSchema),
         defaultValues: {
@@ -39,6 +40,19 @@ export default function RegisterForm() {
                 headers,
                 body: JSON.stringify(data)
             });
+
+            if(!response.ok) {
+                const data = await response.json();
+                const errors = data.details;
+
+                for (const key in errors) {
+                    const errorMessage = errors[key];
+                    setError(key as any, {
+                        message: errorMessage
+                    });
+                }
+                return;
+            }
 
             if (response.redirected) {
                 router.push(response.url);

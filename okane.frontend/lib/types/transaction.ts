@@ -74,4 +74,4 @@ export const CreateTransactionSchema = z
         }
     );
 
-export type CreateTransactionFormSchema = z.infer<typeof CreateTransactionSchema>;
+export type CreateTransactionFormSchema = z.input<typeof CreateTransactionSchema>;
