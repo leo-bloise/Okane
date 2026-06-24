@@ -7,7 +7,7 @@ services:
       - "3000:3000"
     environment:
       API_URL: http://app:8080
-      ENCRYPTION_KEY: 8e2e5a1f4d3c6a7b9c0d1e2f3a4b5c6d7e8f90123456789abcdef0123456789
+      ENCRYPTION_KEY: d4f8a1c72b9e5d4a8f31c6e0b7a29d5f4c8e1a73b6d90f2c7e4a1b5d8c3f6e92
       NODE_ENV: production
     depends_on:
       - app
