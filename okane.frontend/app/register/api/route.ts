@@ -36,8 +36,12 @@ export async function POST(request: Request) {
                             status: 422
                         }
                     )
+                default:
+                    console.error((error as  AxiosError).response?.data)
             }
-        }
+        } else {
+            console.error(error);
+        }        
         return NextResponse.json(
             createResponse(
                 'Unknown error happened', 500, undefined

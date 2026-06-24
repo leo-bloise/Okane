@@ -7,14 +7,25 @@ import { ZodObject } from "zod";
 import { $ZodType, $ZodTypeInternals } from "zod/v4/core";
 
 const ALGORITHM = "aes-256-gcm";
-const KEY = Buffer.from(process.env.ENCRYPTION_KEY ?? 'change-me', "hex");
+
+const getKey = () => {
+  const key = process.env.ENCRYPTION_KEY;
+
+  if(!key) {
+    throw new Error('ENCRYPTION_KEY is not configured');
+  }
+
+  console.log('Key configured: ' + key);
+
+  return Buffer.from(key, "hex");
+};
 
 export function encrypt(text: string): string {
   const iv = randomBytes(12);
 
   const cipher = createCipheriv(
     ALGORITHM,
-    KEY,
+    getKey(),
     iv
   );
 
@@ -44,7 +55,7 @@ export function decrypt(token: string): string {
 
   const decipher = createDecipheriv(
     ALGORITHM,
-    KEY,
+    getKey(),
     iv
   );
 
