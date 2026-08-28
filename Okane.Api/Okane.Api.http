@@ -1,0 +1,57 @@
+@Okane.Api_HostAddress = http://localhost:5091
+
+### Register a new user
+POST {{Okane.Api_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "Ada Lovelace",
+  "email": "ada@example.com",
+  "password": "SuperSecret123"
+}
+
+### Register - invalid input (422 Unprocessable Entity)
+POST {{Okane.Api_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "",
+  "email": "not-an-email",
+  "password": "short"
+}
+
+### Register - duplicate email (422 Unprocessable Entity)
+POST {{Okane.Api_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "Ada Lovelace",
+  "email": "ada@example.com",
+  "password": "SuperSecret123"
+}
+
+### Login
+# @name login
+POST {{Okane.Api_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "ada@example.com",
+  "password": "SuperSecret123"
+}
+
+### Login - invalid credentials (401 Unauthorized)
+POST {{Okane.Api_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "ada@example.com",
+  "password": "wrong-password"
+}
+
+### Get current user (uses the access token returned by the Login request above)
+GET {{Okane.Api_HostAddress}}/api/auth/me
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0ODM4MzFmNS1iNjQ2LTRlYTUtODVhMC1hYTEzNzExMWU2MTIiLCJlbWFpbCI6ImFkYUBleGFtcGxlLmNvbSIsImp0aSI6IjU2OTJmNDU2LWE0NmQtNDM5OS1iNjgzLTAwZmVmZmI2MTk0MiIsIm5hbWUiOiJBZGEgTG92ZWxhY2UiLCJleHAiOjE3ODc4OTEzOTEsImlzcyI6Ik9rYW5lLkFwaSIsImF1ZCI6Ik9rYW5lLkFwaSJ9.VfrRViWKDAvBUA7smrAMejMBfKA6q2zB_UQukrtECgM
+
+### Get current user - unauthorized (no token, 401)
+GET {{Okane.Api_HostAddress}}/api/auth/me

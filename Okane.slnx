@@ -1,0 +1,17 @@
+<Solution>
+  <Folder Name="/Docs/">
+    <File Path="Docs/ledger_definition.md" />
+    <File Path="Docs/wallet_definition.md" />
+    <File Path="Docs/transaction_definition.md" />
+  </Folder>
+  <Folder Name="/Migrations/">
+    <File Path="Migrations/0001_create_users_table.sql" />
+    <File Path="Migrations/0002_create_wallets_table.sql" />
+    <File Path="Migrations/0003_create_ledger_table.sql" />
+  </Folder>
+  <File Path="docker-compose.yml" />
+  <Project Path="Okane.Api/Okane.Api.csproj" />
+  <Project Path="Okane.Transaction/Okane.Transaction.csproj" />
+  <Project Path="Okane.User/Okane.User.csproj" />
+  <Project Path="Okane.Wallet/Okane.Wallet.csproj" />
+</Solution>
