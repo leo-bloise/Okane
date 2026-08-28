@@ -41,6 +41,9 @@ builder.Services.AddProblemDetails();
 var jwtSection = builder.Configuration.GetSection("Jwt");
 builder.Services.Configure<JwtOptions>(jwtSection);
 
+var corsSection = builder.Configuration.GetSection("Cors");
+builder.Services.Configure<CorsOptions>(corsSection);
+
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -60,6 +63,18 @@ builder.Services
     });
 builder.Services.AddAuthorization();
 
+var corsOptions = corsSection.Get<CorsOptions>()
+    ?? throw new InvalidOperationException("Cors configuration section is missing.");
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("default", policy =>
+        {
+            policy.WithOrigins(corsOptions.Origins);
+            policy.AllowAnyMethod();
+            policy.AllowAnyHeader();
+        });
+});
 builder.Services.AddSingleton<JwtTokenService>();
 builder.Services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();
 builder.Services.AddSingleton(serviceProvider =>
@@ -91,10 +106,9 @@ app.UseStatusCodePages(async statusCodeContext =>
     response.ContentType = "application/json";
     await response.WriteAsJsonAsync(apiResponse);
 });
-
+app.UseCors("default");
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();

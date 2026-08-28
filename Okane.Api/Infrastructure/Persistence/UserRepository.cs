@@ -7,6 +7,8 @@ public sealed class UserRepository(NpgsqlConnectionFactory connectionFactory) : 
 {
     public async Task<User.Domain.User?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
+        using var activity = DatabaseObservability.Source.StartActivity("database.get_by_id.user");
+
         await using var connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
         await using var command = connection.CreateCommand();
         command.CommandText = "SELECT id, name, email, password_hash, created_at FROM users WHERE id = @id";
@@ -18,6 +20,8 @@ public sealed class UserRepository(NpgsqlConnectionFactory connectionFactory) : 
 
     public async Task<User.Domain.User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
     {
+        using var activity = DatabaseObservability.Source.StartActivity("database.get_by_email.user");
+
         await using var connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
         await using var command = connection.CreateCommand();
         command.CommandText = "SELECT id, name, email, password_hash, created_at FROM users WHERE email = @email";
@@ -29,6 +33,8 @@ public sealed class UserRepository(NpgsqlConnectionFactory connectionFactory) : 
 
     public async Task AddAsync(User.Domain.User user, CancellationToken cancellationToken = default)
     {
+        using var activity = DatabaseObservability.Source.StartActivity("database.add.user");
+
         await using var connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
         await using var command = connection.CreateCommand();
         command.CommandText = """
@@ -46,6 +52,8 @@ public sealed class UserRepository(NpgsqlConnectionFactory connectionFactory) : 
 
     public async Task UpdateAsync(User.Domain.User user, CancellationToken cancellationToken = default)
     {
+        using var activity = DatabaseObservability.Source.StartActivity("database.update.user");
+
         await using var connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
         await using var command = connection.CreateCommand();
         command.CommandText = """

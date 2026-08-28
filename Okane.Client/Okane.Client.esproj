@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.VisualStudio.JavaScript.Sdk/1.0.4478103">
+  <PropertyGroup>
+    <StartupCommand>npm start</StartupCommand>
+    <JavaScriptTestRoot>src\</JavaScriptTestRoot>
+    <JavaScriptTestFramework>Jasmine</JavaScriptTestFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Remove="node_modules\**" />
+    <Content Remove="dist\**" />
+    <Content Remove=".angular\**" />
+    <None Remove="node_modules\**" />
+    <None Remove="dist\**" />
+    <None Remove=".angular\**" />
+    <TypeScriptCompile Remove="node_modules\**" />
+    <TypeScriptCompile Remove="dist\**" />
+  </ItemGroup>
+</Project>
