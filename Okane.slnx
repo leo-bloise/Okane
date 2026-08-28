@@ -10,6 +10,10 @@
     <File Path="Migrations/0003_create_ledger_table.sql" />
   </Folder>
   <File Path="docker-compose.yml" />
+  <File Path="README.md" />
+  <Folder Name="/Solution Items/">
+    <File Path="README.md" />
+  </Folder>
   <Project Path="Okane.Api/Okane.Api.csproj" />
   <Project Path="Okane.Transaction/Okane.Transaction.csproj" />
   <Project Path="Okane.User/Okane.User.csproj" />

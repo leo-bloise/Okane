@@ -6,12 +6,16 @@ using Microsoft.IdentityModel.Tokens;
 using Okane.Api.Contracts;
 using Okane.Api.Infrastructure;
 using Okane.Api.Infrastructure.ErrorHandling;
+using Okane.Api.Infrastructure.Observability;
 using Okane.Api.Infrastructure.Persistence;
 using Okane.Api.Infrastructure.Security;
 using Okane.User.Application;
 using Okane.User.Application.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.AddOkaneLogging();
+builder.AddOkaneTracing();
 
 builder.Services.AddControllers();
 
