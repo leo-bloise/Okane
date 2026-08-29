@@ -16,6 +16,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddOkaneLogging();
 builder.AddOkaneTracing();
+builder.AddOkaneMetrics();
 
 builder.Services.AddControllers();
 

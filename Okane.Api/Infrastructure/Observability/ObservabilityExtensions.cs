@@ -1,4 +1,5 @@
 using OpenTelemetry.Logs;
+using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Okane.User.Application;
@@ -40,6 +41,21 @@ public static class ObservabilityExtensions
                 .AddAspNetCoreInstrumentation()
                 .AddSource("Npgsql")
                 .AddSource(UserObservability.ActivitySourceName));
+
+        return builder;
+    }
+
+    public static WebApplicationBuilder AddOkaneMetrics(this WebApplicationBuilder builder)
+    {
+        var resourceBuilder = builder.BuildOkaneResource();
+        var otlpEndpoint = builder.Configuration["Observability:OtlpEndpoint"] ?? "http://localhost:4317";
+
+        builder.Services.AddOpenTelemetry()
+            .WithMetrics(metrics => metrics
+                .SetResourceBuilder(resourceBuilder)
+                .AddAspNetCoreInstrumentation()
+                .AddRuntimeInstrumentation()
+                .AddOtlpExporter(options => options.Endpoint = new Uri(otlpEndpoint)));
 
         return builder;
     }
