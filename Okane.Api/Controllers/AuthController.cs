@@ -1,7 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Okane.Api.Contracts;
@@ -9,7 +8,6 @@ using Okane.Api.Contracts.Auth.Requests;
 using Okane.Api.Infrastructure.Security;
 using Okane.User.Application;
 using Okane.User.Application.Interfaces;
-using Okane.Wallet.Application.Interfaces;
 
 namespace Okane.Api.Controllers;
 
@@ -18,10 +16,10 @@ namespace Okane.Api.Controllers;
 public sealed class AuthController(
     IUserService userService,
     ICreateUserUseCase createUserUseCase,
-    IWalletService walletService,
     JwtTokenService tokenService,
     IOptions<JwtOptions> jwtOptions,
-    IWebHostEnvironment environment) : ControllerBase
+    IWebHostEnvironment environment
+) : ControllerBase
 {
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterRequest request, CancellationToken cancellationToken)

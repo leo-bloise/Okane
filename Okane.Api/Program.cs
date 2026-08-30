@@ -115,10 +115,7 @@ builder.Services.AddScoped<TransactionRepository>();
 builder.Services.AddScoped<ITransactionRepository>(sp => sp.GetRequiredService<TransactionRepository>());
 builder.Services.AddScoped<IWalletActivityChecker>(sp => sp.GetRequiredService<TransactionRepository>());
 builder.Services.AddScoped<IReadLedgerRepository, ReadLedgerRepository>();
-builder.Services.AddScoped<TransactionService>();
-builder.Services.AddScoped<ITransactionService>(sp => new TransactionalTransactionService(
-    sp.GetRequiredService<TransactionService>(),
-    sp.GetRequiredService<IDbConnectionProvider<NpgsqlConnection>>()));
+builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddScoped<ICreateUserUseCase, CreateUserUseCase>();
 
 var app = builder.Build();

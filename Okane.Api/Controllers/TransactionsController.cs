@@ -57,16 +57,16 @@ public sealed class TransactionsController(ITransactionService transactionServic
     public async Task<IActionResult> List(CancellationToken cancellationToken, int page = 1, int pageSize = 20)
     {
         var ownerId = Guid.Parse(User.FindFirstValue(JwtRegisteredClaimNames.Sub)!);
-        var pagedResult = await transactionService.GetTransactionsForOwnerAsync(ownerId, page, pageSize, cancellationToken);
+        var pagedResult = await transactionService.GetLedgerForOwnerAsync(ownerId, page, pageSize, cancellationToken);
 
-        var items = pagedResult.Items
-            .Select(transaction => new TransactionResponse(
-                transaction.Id,
-                transaction.FromWalletId,
-                transaction.ToWalletId,
-                transaction.Amount,
-                transaction.Description,
-                transaction.RecordedAt))
+        var items = pagedResult.Entries
+            .Select(entry => new TransactionResponse(
+                entry.Id,
+                entry.FromWallet.Id,
+                entry.ToWallet.Id,
+                entry.Amount,
+                entry.Description,
+                entry.RecordedAt))
             .ToList();
 
         var pageResponse = new TransactionsPageResponse(items, pagedResult.Page, pagedResult.PageSize, pagedResult.TotalCount);

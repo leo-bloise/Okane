@@ -16,7 +16,5 @@ public interface ITransactionService
 
     Task<decimal> GetWalletBalanceAsync(Guid walletId, CancellationToken cancellationToken = default);
 
-    Task<PagedResult<Domain.Transaction>> GetTransactionsForOwnerAsync(Guid ownerId, int page, int pageSize, CancellationToken cancellationToken = default);
-
     Task<ReadModels.LedgerPage> GetLedgerForOwnerAsync(Guid ownerId, int page, int pageSize, CancellationToken cancellationToken = default);
 }

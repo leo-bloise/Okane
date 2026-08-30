@@ -1,5 +1,7 @@
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
+using Npgsql;
+using Okane.Kernel;
 using Okane.Transaction.Application.Interfaces;
 
 namespace Okane.Transaction.Application;
@@ -8,6 +10,7 @@ public sealed class TransactionService(
     ITransactionRepository transactionRepository,
     IReadLedgerRepository readLedgerRepository,
     IWalletLookup walletLookup,
+    IDbConnectionProvider<NpgsqlConnection> dbConnectionProvider,
     ILogger<TransactionService> logger) : ITransactionService
 {
     private const int MinPageSize = 1;
@@ -23,37 +26,48 @@ public sealed class TransactionService(
     {
         using var activity = TransactionObservability.ActivitySource.StartActivity("transaction.record");
 
-        var fromWallet = await walletLookup.GetWalletInfoAsync(fromWalletId, cancellationToken);
-        var toWallet = await walletLookup.GetWalletInfoAsync(toWalletId, cancellationToken);
-
-        if (fromWallet is null || toWallet is null)
+        await dbConnectionProvider.BeginTransactionAsync(cancellationToken);
+        try
         {
-            logger.LogWarning("Transaction rejected: wallet not found ({FromWalletId} / {ToWalletId}).", fromWalletId, toWalletId);
-            activity?.SetStatus(ActivityStatusCode.Error, "Wallet not found.");
-            throw new InvalidOperationException("Wallet not found.");
-        }
+            var fromWallet = await walletLookup.GetWalletInfoAsync(fromWalletId, cancellationToken);
+            var toWallet = await walletLookup.GetWalletInfoAsync(toWalletId, cancellationToken);
 
-        if (fromWallet.OwnerId != ownerId || toWallet.OwnerId != ownerId)
+            if (fromWallet is null || toWallet is null)
+            {
+                logger.LogWarning("Transaction rejected: wallet not found ({FromWalletId} / {ToWalletId}).", fromWalletId, toWalletId);
+                activity?.SetStatus(ActivityStatusCode.Error, "Wallet not found.");
+                throw new InvalidOperationException("Wallet not found.");
+            }
+
+            if (fromWallet.OwnerId != ownerId || toWallet.OwnerId != ownerId)
+            {
+                logger.LogWarning("Transaction rejected: owner {OwnerId} does not own both wallets.", ownerId);
+                activity?.SetStatus(ActivityStatusCode.Error, "Wallets not owned by caller.");
+                throw new InvalidOperationException("You do not own one or both wallets.");
+            }
+
+            if (!fromWallet.IsActive || !toWallet.IsActive)
+            {
+                logger.LogWarning("Transaction rejected: one or both wallets are not active.");
+                activity?.SetStatus(ActivityStatusCode.Error, "Wallet not active.");
+                throw new InvalidOperationException("Both wallets must be active.");
+            }
+
+            var transaction = Domain.Transaction.Record(fromWalletId, toWalletId, ownerId, amount, description);
+            await transactionRepository.AddAsync(transaction, cancellationToken);
+
+            await dbConnectionProvider.CommitAsync(cancellationToken);
+
+            activity?.SetTag("transaction.id", transaction.Id);
+            logger.LogInformation("Transaction {TransactionId} recorded for owner {OwnerId}.", transaction.Id, ownerId);
+
+            return transaction;
+        }
+        catch
         {
-            logger.LogWarning("Transaction rejected: owner {OwnerId} does not own both wallets.", ownerId);
-            activity?.SetStatus(ActivityStatusCode.Error, "Wallets not owned by caller.");
-            throw new InvalidOperationException("You do not own one or both wallets.");
+            await dbConnectionProvider.RollbackAsync(cancellationToken);
+            throw;
         }
-
-        if (!fromWallet.IsActive || !toWallet.IsActive)
-        {
-            logger.LogWarning("Transaction rejected: one or both wallets are not active.");
-            activity?.SetStatus(ActivityStatusCode.Error, "Wallet not active.");
-            throw new InvalidOperationException("Both wallets must be active.");
-        }
-
-        var transaction = Domain.Transaction.Record(fromWalletId, toWalletId, ownerId, amount, description);
-        await transactionRepository.AddAsync(transaction, cancellationToken);
-
-        activity?.SetTag("transaction.id", transaction.Id);
-        logger.LogInformation("Transaction {TransactionId} recorded for owner {OwnerId}.", transaction.Id, ownerId);
-
-        return transaction;
     }
 
     public Task<Domain.Transaction?> GetTransactionAsync(Guid id, CancellationToken cancellationToken = default)
@@ -67,23 +81,6 @@ public sealed class TransactionService(
         var transactions = await transactionRepository.GetByWalletAsync(walletId, cancellationToken);
 
         return transactions.Sum(transaction => transaction.ToWalletId == walletId ? transaction.Amount : -transaction.Amount);
-    }
-
-    public Task<PagedResult<Domain.Transaction>> GetTransactionsForOwnerAsync(
-        Guid ownerId,
-        int page,
-        int pageSize,
-        CancellationToken cancellationToken = default)
-    {
-        using var activity = TransactionObservability.ActivitySource.StartActivity("transaction.get_paged_for_owner");
-
-        var clampedPage = Math.Max(page, 1);
-        var clampedPageSize = Math.Clamp(pageSize, MinPageSize, MaxPageSize);
-
-        activity?.SetTag("transaction.page", clampedPage);
-        activity?.SetTag("transaction.page_size", clampedPageSize);
-
-        return transactionRepository.GetPagedForOwnerAsync(ownerId, clampedPage, clampedPageSize, cancellationToken);
     }
 
     public Task<ReadModels.LedgerPage> GetLedgerForOwnerAsync(
