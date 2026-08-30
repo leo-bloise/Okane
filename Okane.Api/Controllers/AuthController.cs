@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Okane.Api.Contracts;
 using Okane.Api.Contracts.Auth.Requests;
-using Okane.Api.Contracts.Auth.Responses;
 using Okane.Api.Infrastructure.Security;
 using Okane.User.Application.Interfaces;
 
@@ -17,7 +16,8 @@ namespace Okane.Api.Controllers;
 public sealed class AuthController(
     IUserService userService,
     JwtTokenService tokenService,
-    IOptions<JwtOptions> jwtOptions) : ControllerBase
+    IOptions<JwtOptions> jwtOptions,
+    IWebHostEnvironment environment) : ControllerBase
 {
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterRequest request, CancellationToken cancellationToken)
@@ -57,7 +57,17 @@ public sealed class AuthController(
         var token = tokenService.GenerateToken(user);
         var expiresAt = DateTimeOffset.UtcNow.AddMinutes(jwtOptions.Value.ExpiryMinutes);
 
-        var response = ApiResponseFactory.Success(new TokenResponse(token, expiresAt), "Login successful.");
+        var isDevelopment = environment.IsDevelopment();
+        Response.Cookies.Append(AuthCookieNames.AccessToken, token, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = !isDevelopment,
+            SameSite = isDevelopment ? SameSiteMode.Lax : SameSiteMode.None,
+            Expires = expiresAt,
+            Path = "/"
+        });
+
+        var response = ApiResponseFactory.Success(new { expiresAt }, "Login successful.");
         return StatusCode(response.Status, response);
     }
 

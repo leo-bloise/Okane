@@ -61,6 +61,14 @@ builder.Services
             ValidateLifetime = true,
             ClockSkew = TimeSpan.Zero
         };
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                context.Token = context.Request.Cookies[AuthCookieNames.AccessToken];
+                return Task.CompletedTask;
+            }
+        };
     });
 builder.Services.AddAuthorization();
 
@@ -74,6 +82,7 @@ builder.Services.AddCors(options =>
             policy.WithOrigins(corsOptions.Origins);
             policy.AllowAnyMethod();
             policy.AllowAnyHeader();
+            policy.AllowCredentials();
         });
 });
 builder.Services.AddSingleton<JwtTokenService>();

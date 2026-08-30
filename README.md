@@ -73,6 +73,30 @@ Content-Type: application/json
 
 All responses are wrapped in a consistent envelope (`message`, `status`, `timestamp`, and optional `details`).
 
+## Production configuration
+
+Production configuration is **environment-variable only** — no secrets or environment-specific values are ever committed to `appsettings.*.json`. `appsettings.json` / `appsettings.Development.json` only hold local-development defaults. ASP.NET Core reads environment variables automatically (`__` is the JSON hierarchy separator, e.g. `Jwt__SigningKey` maps to `Jwt:SigningKey`), so no code changes are needed to supply these — they just need to be set on whatever is hosting the app.
+
+Before deploying to Production, all of the following **must** be set:
+
+| Variable | Notes |
+|---|---|
+| `Jwt__Issuer` | |
+| `Jwt__Audience` | |
+| `Jwt__SigningKey` | A real secret. Never reuse the value committed in `appsettings.Development.json`. |
+| `Jwt__ExpiryMinutes` | |
+| `Cors__Origins__0` (add `__1`, `__2`, ... for additional allowed origins) | The real Production frontend origin(s). |
+| `ConnectionStrings__Okane` | The real Production Postgres connection string. Never reuse the `okane`/`okane` dev credentials. |
+
+The app fails fast at startup if any of these are missing — this is intentional, not a bug to work around with placeholder defaults.
+
+Optional overrides (safe defaults already exist in `appsettings.json`):
+
+| Variable | Default | When to override |
+|---|---|---|
+| `Observability__ServiceName` | `Okane.Api` | Rarely needed. |
+| `Observability__OtlpEndpoint` | `http://localhost:4317` | Almost always needed in Production — point it at the real otel-collector endpoint. |
+
 ## Database migrations
 
 Migrations are plain, numbered SQL files in [`Migrations/`](Migrations), applied in order by Postgres on container init:

@@ -1,46 +1,30 @@
+import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
-import {
-  AbstractControl,
-  FormBuilder,
-  ReactiveFormsModule,
-  ValidationErrors,
-  Validators,
-} from '@angular/forms';
-import { Router } from '@angular/router';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { Auth } from '../../../core/services/auth';
 import { ApiErrorResponse } from '../../../core/models/api-response.model';
-
-function passwordsMatchValidator(control: AbstractControl): ValidationErrors | null {
-  const password = control.get('password')?.value;
-  const confirmPassword = control.get('confirmPassword')?.value;
-
-  return password === confirmPassword ? null : { passwordsMismatch: true };
-}
+import { LoginResult } from '../../../core/models/auth.model';
 
 @Component({
-  imports: [ReactiveFormsModule],
-  selector: 'app-register',
-  styleUrl: './register.css',
-  templateUrl: './register.html',
+  imports: [DatePipe, ReactiveFormsModule, RouterLink],
+  selector: 'app-login',
+  styleUrl: './login.css',
+  templateUrl: './login.html',
 })
-export class Register {
+export class Login {
   private readonly authService = inject(Auth);
   private readonly formBuilder = inject(FormBuilder);
-  private readonly router = inject(Router);
 
   protected readonly submitting = signal(false);
   protected readonly formError = signal<string | null>(null);
+  protected readonly loggedIn = signal<LoginResult | null>(null);
 
-  protected readonly form = this.formBuilder.nonNullable.group(
-    {
-      name: ['', [Validators.required, Validators.maxLength(200)]],
-      email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(8)]],
-      confirmPassword: ['', [Validators.required]],
-    },
-    { validators: passwordsMatchValidator },
-  );
+  protected readonly form = this.formBuilder.nonNullable.group({
+    email: ['', [Validators.required, Validators.email]],
+    password: ['', [Validators.required]],
+  });
 
   protected submit(): void {
     if (this.form.invalid || this.submitting()) {
@@ -51,12 +35,13 @@ export class Register {
     this.submitting.set(true);
     this.formError.set(null);
 
-    const { name, email, password } = this.form.getRawValue();
+    const { email, password } = this.form.getRawValue();
 
-    this.authService.register({ name, email, password }).subscribe({
-      next: () => {
+    this.authService.login({ email, password }).subscribe({
+      next: (response) => {
         this.submitting.set(false);
-        this.router.navigateByUrl('/login');
+        this.loggedIn.set(response.details ?? null);
+        this.form.reset();
       },
       error: (error: HttpErrorResponse) => {
         this.submitting.set(false);

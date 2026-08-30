@@ -6,4 +6,8 @@ export const routes: Routes = [
     path: 'register',
     loadComponent: () => import('./features/auth/register/register').then((module) => module.Register),
   },
+  {
+    path: 'login',
+    loadComponent: () => import('./features/auth/login/login').then((module) => module.Login),
+  },
 ];

@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Service, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiResponse } from '../models/api-response.model';
-import { RegisterRequest, RegisteredUser } from '../models/auth.model';
+import { LoginRequest, LoginResult, RegisterRequest, RegisteredUser } from '../models/auth.model';
 import { environment } from '../../../environments/environment';
 
 @Service()
@@ -12,5 +12,9 @@ export class Auth {
 
   register(request: RegisterRequest): Observable<ApiResponse<RegisteredUser>> {
     return this.http.post<ApiResponse<RegisteredUser>>(`${this.baseUrl}/register`, request);
+  }
+
+  login(request: LoginRequest): Observable<ApiResponse<LoginResult>> {
+    return this.http.post<ApiResponse<LoginResult>>(`${this.baseUrl}/login`, request);
   }
 }
