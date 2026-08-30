@@ -7,7 +7,9 @@ using Microsoft.Extensions.Options;
 using Okane.Api.Contracts;
 using Okane.Api.Contracts.Auth.Requests;
 using Okane.Api.Infrastructure.Security;
+using Okane.User.Application;
 using Okane.User.Application.Interfaces;
+using Okane.Wallet.Application.Interfaces;
 
 namespace Okane.Api.Controllers;
 
@@ -15,6 +17,8 @@ namespace Okane.Api.Controllers;
 [Route("api/auth")]
 public sealed class AuthController(
     IUserService userService,
+    ICreateUserUseCase createUserUseCase,
+    IWalletService walletService,
     JwtTokenService tokenService,
     IOptions<JwtOptions> jwtOptions,
     IWebHostEnvironment environment) : ControllerBase
@@ -22,32 +26,21 @@ public sealed class AuthController(
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterRequest request, CancellationToken cancellationToken)
     {
-        try
-        {
-            var user = await userService.CreateUserAsync(request.Name, request.Email, request.Password, cancellationToken);
-            var response = ApiResponseFactory.Success(
-                new { user.Id, user.Name, user.Email },
-                "User registered successfully.",
-                StatusCodes.Status201Created);
+        var user = await createUserUseCase.CreateUser(request.Name, request.Email, request.Password, cancellationToken);
 
-            return StatusCode(response.Status, response);
-        }
-        catch (InvalidOperationException)
-        {
-            var response = ApiResponseFactory.Error("These credentials are not allowed to be used. Try again later", StatusCodes.Status422UnprocessableEntity);
-            return StatusCode(response.Status, response);
-        }
-        catch (ArgumentException ex)
-        {
-            var response = ApiResponseFactory.Error(ex.Message, StatusCodes.Status422UnprocessableEntity);
-            return StatusCode(response.Status, response);
-        }
+        var response = ApiResponseFactory.Success(
+            new { user.Id, user.Name, user.Email },
+            "User registered successfully.",
+            StatusCodes.Status201Created);
+
+        return StatusCode(response.Status, response);
     }
 
     [HttpPost("login")]
     public async Task<IActionResult> Login(LoginRequest request, CancellationToken cancellationToken)
     {
         var user = await userService.ValidateCredentialsAsync(request.Email, request.Password, cancellationToken);
+
         if (user is null)
         {
             var errorResponse = ApiResponseFactory.Error("Invalid email or password.", StatusCodes.Status401Unauthorized);
@@ -58,6 +51,7 @@ public sealed class AuthController(
         var expiresAt = DateTimeOffset.UtcNow.AddMinutes(jwtOptions.Value.ExpiryMinutes);
 
         var isDevelopment = environment.IsDevelopment();
+
         Response.Cookies.Append(AuthCookieNames.AccessToken, token, new CookieOptions
         {
             HttpOnly = true,

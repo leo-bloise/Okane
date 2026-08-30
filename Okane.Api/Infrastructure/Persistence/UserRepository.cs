@@ -1,16 +1,18 @@
 using Npgsql;
+using Okane.Kernel;
 using Okane.User.Application.Interfaces;
 
 namespace Okane.Api.Infrastructure.Persistence;
 
-public sealed class UserRepository(NpgsqlConnectionFactory connectionFactory) : IUserRepository
+public sealed class UserRepository(IDbConnectionProvider<NpgsqlConnection> dbConnectionProvider) : IUserRepository
 {
     public async Task<User.Domain.User?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         using var activity = DatabaseObservability.Source.StartActivity("database.get_by_id.user");
 
-        await using var connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
+        var connection = await dbConnectionProvider.GetConnectionAsync(cancellationToken);
         await using var command = connection.CreateCommand();
+        command.Transaction = (NpgsqlTransaction?)dbConnectionProvider.CurrentTransaction;
         command.CommandText = "SELECT id, name, email, password_hash, created_at FROM users WHERE id = @id";
         command.Parameters.AddWithValue("id", id);
 
@@ -22,8 +24,9 @@ public sealed class UserRepository(NpgsqlConnectionFactory connectionFactory) : 
     {
         using var activity = DatabaseObservability.Source.StartActivity("database.get_by_email.user");
 
-        await using var connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
+        var connection = await dbConnectionProvider.GetConnectionAsync(cancellationToken);
         await using var command = connection.CreateCommand();
+        command.Transaction = (NpgsqlTransaction?)dbConnectionProvider.CurrentTransaction;
         command.CommandText = "SELECT id, name, email, password_hash, created_at FROM users WHERE email = @email";
         command.Parameters.AddWithValue("email", email.Trim().ToLowerInvariant());
 
@@ -35,8 +38,9 @@ public sealed class UserRepository(NpgsqlConnectionFactory connectionFactory) : 
     {
         using var activity = DatabaseObservability.Source.StartActivity("database.add.user");
 
-        await using var connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
+        var connection = await dbConnectionProvider.GetConnectionAsync(cancellationToken);
         await using var command = connection.CreateCommand();
+        command.Transaction = (NpgsqlTransaction?)dbConnectionProvider.CurrentTransaction;
         command.CommandText = """
             INSERT INTO users (id, name, email, password_hash, created_at)
             VALUES (@id, @name, @email, @passwordHash, @createdAt)
@@ -54,8 +58,9 @@ public sealed class UserRepository(NpgsqlConnectionFactory connectionFactory) : 
     {
         using var activity = DatabaseObservability.Source.StartActivity("database.update.user");
 
-        await using var connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
+        var connection = await dbConnectionProvider.GetConnectionAsync(cancellationToken);
         await using var command = connection.CreateCommand();
+        command.Transaction = (NpgsqlTransaction?)dbConnectionProvider.CurrentTransaction;
         command.CommandText = """
             UPDATE users
             SET name = @name, email = @email, password_hash = @passwordHash

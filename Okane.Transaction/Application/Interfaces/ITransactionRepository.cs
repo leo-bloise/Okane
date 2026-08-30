@@ -9,4 +9,6 @@ public interface ITransactionRepository
     Task<bool> ExistsForWalletAsync(Guid walletId, CancellationToken cancellationToken = default);
 
     Task AddAsync(Domain.Transaction transaction, CancellationToken cancellationToken = default);
+
+    Task<PagedResult<Domain.Transaction>> GetPagedForOwnerAsync(Guid ownerId, int page, int pageSize, CancellationToken cancellationToken = default);
 }

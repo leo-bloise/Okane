@@ -2,7 +2,9 @@ using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+using Okane.Transaction.Application;
 using Okane.User.Application;
+using Okane.Wallet.Application;
 
 namespace Okane.Api.Infrastructure.Observability;
 
@@ -34,13 +36,18 @@ public static class ObservabilityExtensions
     public static WebApplicationBuilder AddOkaneTracing(this WebApplicationBuilder builder)
     {
         var resourceBuilder = builder.BuildOkaneResource();
+        var otlpEndpoint = builder.Configuration["Observability:OtlpEndpoint"] ?? "http://localhost:4317";
 
         builder.Services.AddOpenTelemetry()
             .WithTracing(tracing => tracing
                 .SetResourceBuilder(resourceBuilder)
                 .AddAspNetCoreInstrumentation()
                 .AddSource("Npgsql")
-                .AddSource(UserObservability.ActivitySourceName));
+                .AddSource("Database")
+                .AddSource(UserObservability.ActivitySourceName)
+                .AddSource(TransactionObservability.ActivitySourceName)
+                .AddSource(WalletObservability.ActivitySourceName)
+                .AddOtlpExporter(options => options.Endpoint = new Uri(otlpEndpoint)));
 
         return builder;
     }

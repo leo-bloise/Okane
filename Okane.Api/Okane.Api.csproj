@@ -18,6 +18,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Okane.User\Okane.User.csproj" />
+    <ProjectReference Include="..\Okane.Wallet\Okane.Wallet.csproj" />
+    <ProjectReference Include="..\Okane.Transaction\Okane.Transaction.csproj" />
+    <ProjectReference Include="..\Okane.Kernel\Okane.Kernel.csproj" />
   </ItemGroup>
 
 </Project>

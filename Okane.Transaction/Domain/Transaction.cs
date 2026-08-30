@@ -8,6 +8,8 @@ public sealed class Transaction
 
     public Guid ToWalletId { get; }
 
+    public Guid OwnerId { get; }
+
     public decimal Amount { get; }
 
     public string? Description { get; }
@@ -20,6 +22,7 @@ public sealed class Transaction
         Guid id,
         Guid fromWalletId,
         Guid toWalletId,
+        Guid ownerId,
         decimal amount,
         string? description,
         DateTimeOffset recordedAt,
@@ -28,13 +31,14 @@ public sealed class Transaction
         Id = id;
         FromWalletId = fromWalletId;
         ToWalletId = toWalletId;
+        OwnerId = ownerId;
         Amount = amount;
         Description = description;
         RecordedAt = recordedAt;
         CreatedAt = createdAt;
     }
 
-    public static Transaction Record(Guid fromWalletId, Guid toWalletId, decimal amount, string? description = null)
+    public static Transaction Record(Guid fromWalletId, Guid toWalletId, Guid ownerId, decimal amount, string? description = null)
     {
         if (fromWalletId == toWalletId)
         {
@@ -47,6 +51,17 @@ public sealed class Transaction
         }
 
         DateTimeOffset now = DateTimeOffset.UtcNow;
-        return new Transaction(Guid.NewGuid(), fromWalletId, toWalletId, amount, description?.Trim(), now, now);
+        return new Transaction(Guid.NewGuid(), fromWalletId, toWalletId, ownerId, amount, description?.Trim(), now, now);
     }
+
+    public static Transaction FromPersistence(
+        Guid id,
+        Guid fromWalletId,
+        Guid toWalletId,
+        Guid ownerId,
+        decimal amount,
+        string? description,
+        DateTimeOffset recordedAt,
+        DateTimeOffset createdAt)
+        => new(id, fromWalletId, toWalletId, ownerId, amount, description, recordedAt, createdAt);
 }

@@ -37,6 +37,9 @@ public sealed class Wallet
         return new Wallet(Guid.NewGuid(), ownerId, ExternalWalletName, WalletKind.External, WalletStatus.Active, DateTimeOffset.UtcNow);
     }
 
+    public static Wallet FromPersistence(Guid id, Guid ownerId, string name, WalletKind kind, WalletStatus status, DateTimeOffset createdAt)
+        => new(id, ownerId, name, kind, status, createdAt);
+
     public void Rename(string name)
     {
         EnsureModifiable();

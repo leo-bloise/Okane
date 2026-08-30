@@ -3,14 +3,21 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.IdentityModel.Tokens;
+using Npgsql;
 using Okane.Api.Contracts;
 using Okane.Api.Infrastructure;
 using Okane.Api.Infrastructure.ErrorHandling;
 using Okane.Api.Infrastructure.Observability;
 using Okane.Api.Infrastructure.Persistence;
 using Okane.Api.Infrastructure.Security;
+using Okane.Api.Infrastructure.UseCases;
+using Okane.Kernel;
+using Okane.Transaction.Application;
+using Okane.Transaction.Application.Interfaces;
 using Okane.User.Application;
 using Okane.User.Application.Interfaces;
+using Okane.Wallet.Application;
+using Okane.Wallet.Application.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -95,8 +102,24 @@ builder.Services.AddSingleton(serviceProvider =>
 
     return new NpgsqlConnectionFactory(connectionString);
 });
+builder.Services.AddScoped<IDbConnectionProvider<NpgsqlConnection>, NpgsqlConnectionProvider>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
+
+builder.Services.AddScoped<WalletRepository>();
+builder.Services.AddScoped<IWalletRepository>(sp => sp.GetRequiredService<WalletRepository>());
+builder.Services.AddScoped<IWalletLookup>(sp => sp.GetRequiredService<WalletRepository>());
+builder.Services.AddScoped<IWalletService, WalletService>();
+
+builder.Services.AddScoped<TransactionRepository>();
+builder.Services.AddScoped<ITransactionRepository>(sp => sp.GetRequiredService<TransactionRepository>());
+builder.Services.AddScoped<IWalletActivityChecker>(sp => sp.GetRequiredService<TransactionRepository>());
+builder.Services.AddScoped<IReadLedgerRepository, ReadLedgerRepository>();
+builder.Services.AddScoped<TransactionService>();
+builder.Services.AddScoped<ITransactionService>(sp => new TransactionalTransactionService(
+    sp.GetRequiredService<TransactionService>(),
+    sp.GetRequiredService<IDbConnectionProvider<NpgsqlConnection>>()));
+builder.Services.AddScoped<ICreateUserUseCase, CreateUserUseCase>();
 
 var app = builder.Build();
 

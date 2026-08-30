@@ -55,3 +55,44 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0ODM4MzFmN
 
 ### Get current user - unauthorized (no token, 401)
 GET {{Okane.Api_HostAddress}}/api/auth/me
+
+### Create a wallet
+POST {{Okane.Api_HostAddress}}/api/wallets
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0ODM4MzFmNS1iNjQ2LTRlYTUtODVhMC1hYTEzNzExMWU2MTIiLCJlbWFpbCI6ImFkYUBleGFtcGxlLmNvbSIsImp0aSI6IjU2OTJmNDU2LWE0NmQtNDM5OS1iNjgzLTAwZmVmZmI2MTk0MiIsIm5hbWUiOiJBZGEgTG92ZWxhY2UiLCJleHAiOjE3ODc4OTEzOTEsImlzcyI6Ik9rYW5lLkFwaSIsImF1ZCI6Ik9rYW5lLkFwaSJ9.VfrRViWKDAvBUA7smrAMejMBfKA6q2zB_UQukrtECgM
+
+{
+  "name": "Food"
+}
+
+### List wallets
+GET {{Okane.Api_HostAddress}}/api/wallets
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0ODM4MzFmNS1iNjQ2LTRlYTUtODVhMC1hYTEzNzExMWU2MTIiLCJlbWFpbCI6ImFkYUBleGFtcGxlLmNvbSIsImp0aSI6IjU2OTJmNDU2LWE0NmQtNDM5OS1iNjgzLTAwZmVmZmI2MTk0MiIsIm5hbWUiOiJBZGEgTG92ZWxhY2UiLCJleHAiOjE3ODc4OTEzOTEsImlzcyI6Ik9rYW5lLkFwaSIsImF1ZCI6Ik9rYW5lLkFwaSJ9.VfrRViWKDAvBUA7smrAMejMBfKA6q2zB_UQukrtECgM
+
+### Create a transaction
+POST {{Okane.Api_HostAddress}}/api/transactions
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0ODM4MzFmNS1iNjQ2LTRlYTUtODVhMC1hYTEzNzExMWU2MTIiLCJlbWFpbCI6ImFkYUBleGFtcGxlLmNvbSIsImp0aSI6IjU2OTJmNDU2LWE0NmQtNDM5OS1iNjgzLTAwZmVmZmI2MTk0MiIsIm5hbWUiOiJBZGEgTG92ZWxhY2UiLCJleHAiOjE3ODc4OTEzOTEsImlzcyI6Ik9rYW5lLkFwaSIsImF1ZCI6Ik9rYW5lLkFwaSJ9.VfrRViWKDAvBUA7smrAMejMBfKA6q2zB_UQukrtECgM
+
+{
+  "fromWalletId": "00000000-0000-0000-0000-000000000000",
+  "toWalletId": "00000000-0000-0000-0000-000000000000",
+  "amount": 50.00,
+  "description": "Groceries"
+}
+
+### Create a transaction - same wallet on both sides (422 Unprocessable Entity)
+POST {{Okane.Api_HostAddress}}/api/transactions
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0ODM4MzFmNS1iNjQ2LTRlYTUtODVhMC1hYTEzNzExMWU2MTIiLCJlbWFpbCI6ImFkYUBleGFtcGxlLmNvbSIsImp0aSI6IjU2OTJmNDU2LWE0NmQtNDM5OS1iNjgzLTAwZmVmZmI2MTk0MiIsIm5hbWUiOiJBZGEgTG92ZWxhY2UiLCJleHAiOjE3ODc4OTEzOTEsImlzcyI6Ik9rYW5lLkFwaSIsImF1ZCI6Ik9rYW5lLkFwaSJ9.VfrRViWKDAvBUA7smrAMejMBfKA6q2zB_UQukrtECgM
+
+{
+  "fromWalletId": "00000000-0000-0000-0000-000000000000",
+  "toWalletId": "00000000-0000-0000-0000-000000000000",
+  "amount": 50.00,
+  "description": "Same wallet on both sides"
+}
+
+### List transactions (paginated)
+GET {{Okane.Api_HostAddress}}/api/transactions?page=1&pageSize=20
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0ODM4MzFmNS1iNjQ2LTRlYTUtODVhMC1hYTEzNzExMWU2MTIiLCJlbWFpbCI6ImFkYUBleGFtcGxlLmNvbSIsImp0aSI6IjU2OTJmNDU2LWE0NmQtNDM5OS1iNjgzLTAwZmVmZmI2MTk0MiIsIm5hbWUiOiJBZGEgTG92ZWxhY2UiLCJleHAiOjE3ODc4OTEzOTEsImlzcyI6Ik9rYW5lLkFwaSIsImF1ZCI6Ik9rYW5lLkFwaSJ9.VfrRViWKDAvBUA7smrAMejMBfKA6q2zB_UQukrtECgM

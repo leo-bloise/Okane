@@ -1,2 +1,101 @@
-<h1 class="text-lg font-semibold text-ink-900">Ledger</h1>
-<p class="mt-1 text-sm text-ink-500">Your transactions will appear here soon.</p>
+<div class="flex items-center justify-between">
+  <div>
+    <h1 class="text-lg font-semibold text-ink-900">Ledger</h1>
+    <p class="mt-1 text-sm text-ink-500">Your transactions, most recent first.</p>
+  </div>
+  <button
+    type="button"
+    (click)="openDrawer()"
+    class="flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-700"
+  >
+    <span class="material-symbols-outlined text-[18px]">add</span>
+    New transaction
+  </button>
+</div>
+
+<div class="mt-6 overflow-hidden rounded-xl border border-border bg-surface">
+  <table class="w-full text-left text-sm">
+    <thead class="bg-surface-muted text-ink-700">
+      <tr>
+        <th class="px-4 py-3 font-medium">Recorded at</th>
+        <th class="px-4 py-3 font-medium">From</th>
+        <th class="px-4 py-3 font-medium">To</th>
+        <th class="px-4 py-3 font-medium">Amount</th>
+        <th class="px-4 py-3 font-medium">Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (entry of entries(); track entry.id) {
+        <tr class="border-t border-border">
+          <td class="px-4 py-3 text-ink-700">{{ entry.recordedAt | date: 'medium' }}</td>
+          <td class="px-4 py-3 text-ink-900">{{ entry.fromWallet.name }}</td>
+          <td class="px-4 py-3 text-ink-900">{{ entry.toWallet.name }}</td>
+          <td class="px-4 py-3 text-ink-900">{{ entry.amount | currency: 'BRL' }}</td>
+          <td class="px-4 py-3 text-ink-500">{{ entry.description || '—' }}</td>
+        </tr>
+      } @empty {
+        <tr>
+          <td colspan="5" class="px-4 py-8 text-center text-ink-500">
+            {{ loading() ? 'Loading…' : 'No transactions yet.' }}
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
+
+<div class="mt-4 flex items-center justify-between text-sm text-ink-500">
+  <span>Page {{ page() }} of {{ totalPages() }} ({{ totalCount() }} total)</span>
+  <div class="flex gap-2">
+    <button
+      type="button"
+      (click)="previousPage()"
+      [disabled]="page() <= 1"
+      class="rounded-lg border border-border px-3 py-1.5 text-ink-700 hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      Previous
+    </button>
+    <button
+      type="button"
+      (click)="nextPage()"
+      [disabled]="page() >= totalPages()"
+      class="rounded-lg border border-border px-3 py-1.5 text-ink-700 hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      Next
+    </button>
+  </div>
+</div>
+
+<app-create-transaction-drawer
+  [wallets]="wallets()"
+  [open]="showDrawer()"
+  (created)="onTransactionCreated()"
+  (closed)="onDrawerClosed()"
+/>
+
+@if (showSuccessModal()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4">
+    <div class="w-full max-w-sm rounded-xl border border-border bg-surface p-6 text-center shadow-lg">
+      <div class="mx-auto flex size-12 items-center justify-center rounded-full bg-brand-100 text-brand-700">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" class="size-6">
+          <path
+            d="M5 13l4 4L19 7"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </div>
+      <h2 class="mt-4 text-lg font-semibold text-ink-900">Transaction recorded</h2>
+      <p class="mt-2 text-sm text-ink-500">Your transaction was recorded successfully.</p>
+      <button
+        type="button"
+        (click)="closeSuccessModal()"
+        class="mt-6 w-full rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-700"
+      >
+        Close
+      </button>
+    </div>
+  </div>
+}
