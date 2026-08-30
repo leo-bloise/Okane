@@ -31,6 +31,10 @@ body {
   color: var(--color-ink-900);
 }
 
+button:not(:disabled) {
+  cursor: pointer;
+}
+
 .material-symbols-outlined {
   font-family: "Material Symbols Outlined";
   font-weight: normal;
