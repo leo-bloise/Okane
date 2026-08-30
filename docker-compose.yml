@@ -10,6 +10,12 @@ services:
       - "5432:5432"
     volumes:
       - ./Migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U okane -d okane"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
 
   grafana:
     image: grafana/grafana:latest
@@ -20,8 +26,15 @@ services:
       - grafana-data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
       - ./grafana/dashboards:/etc/grafana/dashboards:ro
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
     depends_on:
-      - prometheus
+      prometheus:
+        condition: service_healthy
 
   otel-collector:
     image: otel/opentelemetry-collector-contrib:latest
@@ -33,6 +46,12 @@ services:
       - "4317:4317" # OTLP gRPC
       - "4318:4318" # OTLP HTTP
       - "8889:8889" # Prometheus scrape endpoint
+    healthcheck:
+      test: ["CMD", "/otelcol-contrib", "validate", "--config=/etc/otel-collector-config.yaml"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
   prometheus:
     image: prom/prometheus:latest
@@ -42,8 +61,15 @@ services:
       - prometheus-data:/prometheus
     ports:
       - "9090:9090"
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     depends_on:
-      - otel-collector
+      otel-collector:
+        condition: service_healthy
 
 volumes:
   grafana-data:
