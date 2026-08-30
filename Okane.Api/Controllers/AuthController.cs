@@ -66,6 +66,14 @@ public sealed class AuthController(
             Expires = expiresAt,
             Path = "/"
         });
+        Response.Cookies.Append(AuthCookieNames.HasSession, "1", new CookieOptions
+        {
+            HttpOnly = false,
+            Secure = !isDevelopment,
+            SameSite = isDevelopment ? SameSiteMode.Lax : SameSiteMode.None,
+            Expires = expiresAt,
+            Path = "/"
+        });
 
         var response = ApiResponseFactory.Success(new { expiresAt }, "Login successful.");
         return StatusCode(response.Status, response);

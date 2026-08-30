@@ -1,14 +1,12 @@
-import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { Auth } from '../../../core/services/auth';
 import { ApiErrorResponse } from '../../../core/models/api-response.model';
-import { LoginResult } from '../../../core/models/auth.model';
 
 @Component({
-  imports: [DatePipe, ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink],
   selector: 'app-login',
   styleUrl: './login.css',
   templateUrl: './login.html',
@@ -16,10 +14,10 @@ import { LoginResult } from '../../../core/models/auth.model';
 export class Login {
   private readonly authService = inject(Auth);
   private readonly formBuilder = inject(FormBuilder);
+  private readonly router = inject(Router);
 
   protected readonly submitting = signal(false);
   protected readonly formError = signal<string | null>(null);
-  protected readonly loggedIn = signal<LoginResult | null>(null);
 
   protected readonly form = this.formBuilder.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
@@ -38,10 +36,9 @@ export class Login {
     const { email, password } = this.form.getRawValue();
 
     this.authService.login({ email, password }).subscribe({
-      next: (response) => {
+      next: () => {
         this.submitting.set(false);
-        this.loggedIn.set(response.details ?? null);
-        this.form.reset();
+        this.router.navigateByUrl('/app/ledger');
       },
       error: (error: HttpErrorResponse) => {
         this.submitting.set(false);
