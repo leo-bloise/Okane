@@ -1,0 +1,54 @@
+<div class="viz-root">
+  <div class="flex items-center justify-between">
+    <div class="flex items-center gap-4 text-sm">
+      <span class="flex items-center gap-1.5 text-ink-700">
+        <span class="inline-block size-2.5 rounded-full bg-[var(--series-in)]"></span>
+        In
+      </span>
+      <span class="flex items-center gap-1.5 text-ink-700">
+        <span class="inline-block size-2.5 rounded-full bg-[var(--series-out)]"></span>
+        Out
+      </span>
+    </div>
+    @if (hasActivity()) {
+      <button
+        type="button"
+        (click)="toggleTable()"
+        class="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-ink-700 hover:bg-surface-muted"
+      >
+        {{ showTable() ? 'Show chart' : 'Show table' }}
+      </button>
+    }
+  </div>
+
+  @if (!hasActivity()) {
+    <p class="mt-6 py-8 text-center text-sm text-ink-500">No wallet activity to compare this month.</p>
+  } @else if (showTable()) {
+    <div class="mt-4 overflow-hidden rounded-lg border border-border">
+      <table class="w-full text-left text-sm">
+        <thead class="bg-surface-muted text-ink-700">
+          <tr>
+            <th class="px-3 py-2 font-medium">Wallet</th>
+            <th class="px-3 py-2 font-medium">In</th>
+            <th class="px-3 py-2 font-medium">Out</th>
+            <th class="px-3 py-2 font-medium">Balance</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (wallet of wallets(); track wallet.name) {
+            <tr class="border-t border-border">
+              <td class="px-3 py-2 text-ink-900">{{ wallet.name }}</td>
+              <td class="px-3 py-2 text-ink-700">{{ wallet.inFlow | currency: 'BRL' }}</td>
+              <td class="px-3 py-2 text-ink-700">{{ wallet.outFlow | currency: 'BRL' }}</td>
+              <td class="px-3 py-2 text-ink-900">{{ wallet.balance | currency: 'BRL' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  } @else {
+    <div class="mt-4 h-64 max-w-xl">
+      <canvas baseChart [data]="chartData()" [options]="chartOptions" type="bar"></canvas>
+    </div>
+  }
+</div>

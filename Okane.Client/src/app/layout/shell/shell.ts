@@ -9,6 +9,7 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 })
 export class Shell {
   protected readonly menuItems = [
+    { label: 'General Status', icon: 'dashboard', path: '/app/general-status' },
     { label: 'Ledger', icon: 'account_balance', path: '/app/ledger' },
     { label: 'Wallets', icon: 'account_balance_wallet', path: '/app/wallets' },
   ];

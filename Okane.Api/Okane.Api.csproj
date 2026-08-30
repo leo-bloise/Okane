@@ -23,4 +23,16 @@
     <ProjectReference Include="..\Okane.Kernel\Okane.Kernel.csproj" />
   </ItemGroup>
 
+  <!--
+    Okane.Seeder is a dev-only convenience (seeds demo data on startup in the
+    Development environment) and must never be part of a Production build. Since
+    ASPNETCORE_ENVIRONMENT is a runtime setting, the only way to guarantee it is
+    never *shipped* is to keep it out of the build entirely for Release builds -
+    the configuration production deployments are published with (`dotnet publish
+    -c Release`). Program.cs mirrors this with matching `#if DEBUG` guards.
+  -->
+  <ItemGroup Condition="'$(Configuration)' == 'Debug'">
+    <ProjectReference Include="..\Okane.Seeder\Okane.Seeder.csproj" />
+  </ItemGroup>
+
 </Project>

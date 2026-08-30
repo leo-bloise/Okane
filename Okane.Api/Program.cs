@@ -13,6 +13,9 @@ using Okane.Api.Infrastructure.Security;
 using Okane.Api.Infrastructure.UseCases;
 using Okane.Api.Reports;
 using Okane.Kernel;
+#if DEBUG
+using Okane.Seeder;
+#endif
 using Okane.Transaction.Application;
 using Okane.Transaction.Application.Interfaces;
 using Okane.User.Application;
@@ -122,7 +125,21 @@ builder.Services.AddScoped<ICreateUserUseCase, CreateUserUseCase>();
 builder.Services.AddScoped<IDashboardReportRepository, DashboardReportRepository>();
 builder.Services.AddScoped<DashboardReportService>();
 
+#if DEBUG
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddDatabaseSeeder();
+}
+#endif
+
 var app = builder.Build();
+
+#if DEBUG
+if (app.Environment.IsDevelopment())
+{
+    await app.SeedDevelopmentDataAsync();
+}
+#endif
 
 app.UseExceptionHandler();
 app.UseStatusCodePages(async statusCodeContext =>

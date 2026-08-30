@@ -16,6 +16,7 @@
   </Folder>
   <Project Path="Okane.Api/Okane.Api.csproj" />
   <Project Path="Okane.Kernel/Okane.Kernel.csproj" Id="23c9b39f-14c7-4f90-b7be-fb19599fcd33" />
+  <Project Path="Okane.Seeder/Okane.Seeder.csproj" />
   <Project Path="Okane.Transaction/Okane.Transaction.csproj" />
   <Project Path="Okane.User/Okane.User.csproj" />
   <Project Path="Okane.Wallet/Okane.Wallet.csproj" />

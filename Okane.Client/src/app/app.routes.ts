@@ -18,6 +18,13 @@ export const routes: Routes = [
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'ledger' },
       {
+        path: 'general-status',
+        loadComponent: () =>
+          import('./features/dashboard/general-status-page/general-status-page').then(
+            (module) => module.GeneralStatusPage,
+          ),
+      },
+      {
         path: 'ledger',
         loadComponent: () =>
           import('./features/ledger/ledger-page/ledger-page').then((module) => module.LedgerPage),

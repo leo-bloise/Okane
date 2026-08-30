@@ -1,0 +1,39 @@
+<div>
+  <h1 class="text-lg font-semibold text-ink-900">General Status</h1>
+  <p class="mt-1 text-sm text-ink-500">Your finances this month, at a glance.</p>
+</div>
+
+@if (loading() && !report()) {
+  <div class="mt-6 rounded-xl border border-border bg-surface p-8 text-center text-sm text-ink-500">Loading…</div>
+} @else if (report(); as data) {
+  <div class="mt-6 rounded-xl border border-border bg-surface p-6">
+    <p class="text-sm text-ink-500">Total balance</p>
+    <p
+      class="mt-1 text-5xl font-semibold"
+      [class.text-danger-600]="data.balance < 0"
+      [class.text-ink-900]="data.balance >= 0"
+    >
+      {{ data.balance | currency: 'BRL' }}
+    </p>
+  </div>
+
+  <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <div class="rounded-xl border border-border bg-surface p-5">
+      <p class="text-sm text-ink-500">Total in</p>
+      <p class="mt-1 text-2xl font-semibold text-ink-900">{{ data.inFlow | currency: 'BRL' }}</p>
+    </div>
+    <div class="rounded-xl border border-border bg-surface p-5">
+      <p class="text-sm text-ink-500">Total out</p>
+      <p class="mt-1 text-2xl font-semibold text-ink-900">{{ data.outFlow | currency: 'BRL' }}</p>
+    </div>
+  </div>
+
+  <div class="mt-4 rounded-xl border border-border bg-surface p-6">
+    <h2 class="text-sm font-semibold text-ink-900">In vs. out by wallet</h2>
+    <app-wallet-flow-chart [wallets]="data.wallets" />
+  </div>
+} @else {
+  <div class="mt-6 rounded-xl border border-border bg-surface p-8 text-center text-sm text-ink-500">
+    Unable to load your dashboard right now.
+  </div>
+}
