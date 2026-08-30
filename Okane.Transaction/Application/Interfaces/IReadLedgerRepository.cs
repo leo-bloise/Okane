@@ -4,5 +4,5 @@ namespace Okane.Transaction.Application.Interfaces;
 
 public interface IReadLedgerRepository
 {
-    Task<LedgerPage> GetPagedForOwnerAsync(Guid ownerId, int page, int pageSize, CancellationToken cancellationToken = default);
+    Task<LedgerPage> GetFilteredPagedForOwnerAsync(Guid ownerId, int page, int pageSize, CancellationToken cancellationToken = default);
 }

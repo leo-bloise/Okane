@@ -99,6 +99,6 @@ public sealed class TransactionService(
         activity?.SetTag("ledger.page", clampedPage);
         activity?.SetTag("ledger.page_size", clampedPageSize);
 
-        return readLedgerRepository.GetPagedForOwnerAsync(ownerId, clampedPage, clampedPageSize, cancellationToken);
+        return readLedgerRepository.GetFilteredPagedForOwnerAsync(ownerId, clampedPage, clampedPageSize, cancellationToken);
     }
 }

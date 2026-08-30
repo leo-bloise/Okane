@@ -11,6 +11,7 @@ using Okane.Api.Infrastructure.Observability;
 using Okane.Api.Infrastructure.Persistence;
 using Okane.Api.Infrastructure.Security;
 using Okane.Api.Infrastructure.UseCases;
+using Okane.Api.Reports;
 using Okane.Kernel;
 using Okane.Transaction.Application;
 using Okane.Transaction.Application.Interfaces;
@@ -117,6 +118,9 @@ builder.Services.AddScoped<IWalletActivityChecker>(sp => sp.GetRequiredService<T
 builder.Services.AddScoped<IReadLedgerRepository, ReadLedgerRepository>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddScoped<ICreateUserUseCase, CreateUserUseCase>();
+
+builder.Services.AddScoped<IDashboardReportRepository, DashboardReportRepository>();
+builder.Services.AddScoped<DashboardReportService>();
 
 var app = builder.Build();
 

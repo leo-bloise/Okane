@@ -7,7 +7,7 @@ namespace Okane.Api.Infrastructure.Persistence;
 
 public sealed class ReadLedgerRepository(IDbConnectionProvider<NpgsqlConnection> dbConnectionProvider) : IReadLedgerRepository
 {
-    public async Task<LedgerPage> GetPagedForOwnerAsync(Guid ownerId, int page, int pageSize, CancellationToken cancellationToken = default)
+    public async Task<LedgerPage> GetFilteredPagedForOwnerAsync(Guid ownerId, int page, int pageSize, CancellationToken cancellationToken = default)
     {
         using var activity = DatabaseObservability.Source.StartActivity("database.get_paged_for_owner.ledger");
 
