@@ -6,8 +6,11 @@ public abstract class DomainException : Exception
 {
     public HttpStatusCode StatusCode { get; private set; }
 
-    public DomainException(HttpStatusCode statusCode)
+    public string UserMessage { get; private set;  }
+
+    public DomainException(string message, HttpStatusCode statusCode, string? userMessage = null) : base(message)
     {
         StatusCode = statusCode;
+        this.UserMessage = userMessage ?? message;
     }
 }

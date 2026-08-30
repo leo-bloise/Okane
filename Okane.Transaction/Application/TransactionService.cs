@@ -2,6 +2,7 @@ using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 using Okane.Kernel;
+using Okane.Transaction.Application.Exceptions;
 using Okane.Transaction.Application.Interfaces;
 
 namespace Okane.Transaction.Application;
@@ -11,7 +12,8 @@ public sealed class TransactionService(
     IReadLedgerRepository readLedgerRepository,
     IWalletLookup walletLookup,
     IDbConnectionProvider<NpgsqlConnection> dbConnectionProvider,
-    ILogger<TransactionService> logger) : ITransactionService
+    ILogger<TransactionService> logger
+) : ITransactionService
 {
     private const int MinPageSize = 1;
     private const int MaxPageSize = 100;
@@ -36,21 +38,21 @@ public sealed class TransactionService(
             {
                 logger.LogWarning("Transaction rejected: wallet not found ({FromWalletId} / {ToWalletId}).", fromWalletId, toWalletId);
                 activity?.SetStatus(ActivityStatusCode.Error, "Wallet not found.");
-                throw new InvalidOperationException("Wallet not found.");
+                throw new WalletNotFoundException(fromWalletId, toWalletId);
             }
 
             if (fromWallet.OwnerId != ownerId || toWallet.OwnerId != ownerId)
             {
                 logger.LogWarning("Transaction rejected: owner {OwnerId} does not own both wallets.", ownerId);
                 activity?.SetStatus(ActivityStatusCode.Error, "Wallets not owned by caller.");
-                throw new InvalidOperationException("You do not own one or both wallets.");
+                throw new WalletOwnershipMismatchException(ownerId);
             }
 
             if (!fromWallet.IsActive || !toWallet.IsActive)
             {
                 logger.LogWarning("Transaction rejected: one or both wallets are not active.");
                 activity?.SetStatus(ActivityStatusCode.Error, "Wallet not active.");
-                throw new InvalidOperationException("Both wallets must be active.");
+                throw new InactiveWalletException();
             }
 
             var transaction = Domain.Transaction.Record(fromWalletId, toWalletId, ownerId, amount, description);

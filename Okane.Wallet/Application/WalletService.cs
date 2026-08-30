@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
+using Okane.Wallet.Application.Exceptions;
 using Okane.Wallet.Application.Interfaces;
 
 namespace Okane.Wallet.Application;
@@ -7,7 +8,8 @@ namespace Okane.Wallet.Application;
 public sealed class WalletService(
     IWalletRepository walletRepository,
     IWalletActivityChecker walletActivityChecker,
-    ILogger<WalletService> logger) : IWalletService
+    ILogger<WalletService> logger
+) : IWalletService
 {
     private const int MinPageSize = 1;
     private const int MaxPageSize = 100;
@@ -34,7 +36,7 @@ public sealed class WalletService(
         {
             logger.LogWarning("External wallet creation rejected: owner {OwnerId} already has one.", ownerId);
             activity?.SetStatus(ActivityStatusCode.Error, "External wallet already exists.");
-            throw new InvalidOperationException("This owner already has an External Wallet.");
+            throw new ExternalWalletAlreadyExistsException(ownerId);
         }
 
         var wallet = Domain.Wallet.CreateExternal(ownerId);
@@ -70,7 +72,7 @@ public sealed class WalletService(
         using var activity = WalletObservability.ActivitySource.StartActivity("wallet.rename");
 
         var wallet = await walletRepository.GetByIdAsync(id, cancellationToken)
-            ?? throw new InvalidOperationException("Wallet not found.");
+            ?? throw new WalletNotFoundException(id);
 
         wallet.Rename(name);
         logger.LogInformation("Wallet {WalletId} renamed.", wallet.Id);
@@ -82,7 +84,7 @@ public sealed class WalletService(
         using var activity = WalletObservability.ActivitySource.StartActivity("wallet.archive");
 
         var wallet = await walletRepository.GetByIdAsync(id, cancellationToken)
-            ?? throw new InvalidOperationException("Wallet not found.");
+            ?? throw new WalletNotFoundException(id);
 
         wallet.Archive();
         logger.LogInformation("Wallet {WalletId} archived.", wallet.Id);
@@ -94,7 +96,7 @@ public sealed class WalletService(
         using var activity = WalletObservability.ActivitySource.StartActivity("wallet.reactivate");
 
         var wallet = await walletRepository.GetByIdAsync(id, cancellationToken)
-            ?? throw new InvalidOperationException("Wallet not found.");
+            ?? throw new WalletNotFoundException(id);
 
         wallet.Reactivate();
         logger.LogInformation("Wallet {WalletId} reactivated.", wallet.Id);
@@ -106,19 +108,19 @@ public sealed class WalletService(
         using var activity = WalletObservability.ActivitySource.StartActivity("wallet.delete");
 
         var wallet = await walletRepository.GetByIdAsync(id, cancellationToken)
-            ?? throw new InvalidOperationException("Wallet not found.");
+            ?? throw new WalletNotFoundException(id);
 
         if (wallet.Kind == Domain.WalletKind.External)
         {
             activity?.SetStatus(ActivityStatusCode.Error, "Cannot delete the External wallet.");
-            throw new InvalidOperationException("The External Wallet cannot be renamed, archived, or deleted.");
+            throw new ExternalWalletModificationNotAllowedException();
         }
 
         if (await walletActivityChecker.HasTransactionsAsync(id, cancellationToken))
         {
             logger.LogWarning("Delete rejected: wallet {WalletId} has recorded transactions.", id);
             activity?.SetStatus(ActivityStatusCode.Error, "Wallet has transactions.");
-            throw new InvalidOperationException("A wallet with recorded transactions cannot be deleted; archive it instead.");
+            throw new WalletHasTransactionsException(id);
         }
 
         logger.LogInformation("Wallet {WalletId} deleted.", id);

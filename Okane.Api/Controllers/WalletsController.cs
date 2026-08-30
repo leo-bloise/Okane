@@ -29,11 +29,6 @@ public sealed class WalletsController(IWalletService walletService) : Controller
 
             return StatusCode(response.Status, response);
         }
-        catch (InvalidOperationException ex)
-        {
-            var response = ApiResponseFactory.Error(ex.Message, StatusCodes.Status422UnprocessableEntity);
-            return StatusCode(response.Status, response);
-        }
         catch (ArgumentException ex)
         {
             var response = ApiResponseFactory.Error(ex.Message, StatusCodes.Status422UnprocessableEntity);
