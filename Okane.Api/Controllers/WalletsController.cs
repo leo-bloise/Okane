@@ -42,16 +42,17 @@ public sealed class WalletsController(IWalletService walletService) : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> List(CancellationToken cancellationToken)
+    public async Task<IActionResult> List(CancellationToken cancellationToken, int page = 1, int pageSize = 20)
     {
         var ownerId = Guid.Parse(User.FindFirstValue(JwtRegisteredClaimNames.Sub)!);
-        var wallets = await walletService.GetWalletsForOwnerAsync(ownerId, cancellationToken);
+        var walletsPage = await walletService.GetWalletsForOwnerAsync(ownerId, page, pageSize, cancellationToken);
 
-        var items = wallets
+        var items = walletsPage.Items
             .Select(wallet => new WalletResponse(wallet.Id, wallet.Name, wallet.Kind, wallet.Status, wallet.CreatedAt))
             .ToList();
 
-        var response = ApiResponseFactory.Success(items, "Wallets retrieved successfully.");
+        var pageResponse = new WalletsPageResponse(items, walletsPage.Page, walletsPage.PageSize, walletsPage.TotalCount);
+        var response = ApiResponseFactory.Success(pageResponse, "Wallets retrieved successfully.");
         return StatusCode(response.Status, response);
     }
 }

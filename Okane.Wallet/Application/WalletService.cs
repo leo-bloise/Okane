@@ -9,6 +9,9 @@ public sealed class WalletService(
     IWalletActivityChecker walletActivityChecker,
     ILogger<WalletService> logger) : IWalletService
 {
+    private const int MinPageSize = 1;
+    private const int MaxPageSize = 100;
+
     public async Task<Domain.Wallet> CreateStandardWalletAsync(Guid ownerId, string name, CancellationToken cancellationToken = default)
     {
         using var activity = WalletObservability.ActivitySource.StartActivity("wallet.create_standard");
@@ -48,6 +51,19 @@ public sealed class WalletService(
 
     public Task<IReadOnlyCollection<Domain.Wallet>> GetWalletsForOwnerAsync(Guid ownerId, CancellationToken cancellationToken = default)
         => walletRepository.GetByOwnerAsync(ownerId, cancellationToken);
+
+    public Task<PagedResult<Domain.Wallet>> GetWalletsForOwnerAsync(Guid ownerId, int page, int pageSize, CancellationToken cancellationToken = default)
+    {
+        using var activity = WalletObservability.ActivitySource.StartActivity("wallet.get_paged_for_owner");
+
+        var clampedPage = Math.Max(page, 1);
+        var clampedPageSize = Math.Clamp(pageSize, MinPageSize, MaxPageSize);
+
+        activity?.SetTag("wallet.page", clampedPage);
+        activity?.SetTag("wallet.page_size", clampedPageSize);
+
+        return walletRepository.GetPagedForOwnerAsync(ownerId, clampedPage, clampedPageSize, cancellationToken);
+    }
 
     public async Task RenameWalletAsync(Guid id, string name, CancellationToken cancellationToken = default)
     {

@@ -6,6 +6,8 @@ public interface IWalletRepository
 
     Task<IReadOnlyCollection<Domain.Wallet>> GetByOwnerAsync(Guid ownerId, CancellationToken cancellationToken = default);
 
+    Task<PagedResult<Domain.Wallet>> GetPagedForOwnerAsync(Guid ownerId, int page, int pageSize, CancellationToken cancellationToken = default);
+
     Task AddAsync(Domain.Wallet wallet, CancellationToken cancellationToken = default);
 
     Task UpdateAsync(Domain.Wallet wallet, CancellationToken cancellationToken = default);

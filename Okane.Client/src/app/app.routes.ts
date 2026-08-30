@@ -22,6 +22,11 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/ledger/ledger-page/ledger-page').then((module) => module.LedgerPage),
       },
+      {
+        path: 'wallets',
+        loadComponent: () =>
+          import('./features/wallets/wallets-page/wallets-page').then((module) => module.WalletsPage),
+      },
     ],
   },
 ];

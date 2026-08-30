@@ -5,3 +5,14 @@ export interface Wallet {
   status: 'Active' | 'Archived';
   createdAt: string;
 }
+
+export interface WalletsPage {
+  items: Wallet[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+}
+
+export interface CreateWalletRequest {
+  name: string;
+}

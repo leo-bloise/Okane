@@ -10,6 +10,8 @@ public interface IWalletService
 
     Task<IReadOnlyCollection<Domain.Wallet>> GetWalletsForOwnerAsync(Guid ownerId, CancellationToken cancellationToken = default);
 
+    Task<PagedResult<Domain.Wallet>> GetWalletsForOwnerAsync(Guid ownerId, int page, int pageSize, CancellationToken cancellationToken = default);
+
     Task RenameWalletAsync(Guid id, string name, CancellationToken cancellationToken = default);
 
     Task ArchiveWalletAsync(Guid id, CancellationToken cancellationToken = default);

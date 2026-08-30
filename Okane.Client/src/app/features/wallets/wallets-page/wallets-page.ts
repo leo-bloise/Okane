@@ -1,35 +1,32 @@
-import { CurrencyPipe, DatePipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
-import { LedgerEntry } from '../../../core/models/ledger.model';
 import { Wallet } from '../../../core/models/wallet.model';
-import { Ledger } from '../../../core/services/ledger';
-import { CreateTransactionDrawer } from '../create-transaction-drawer/create-transaction-drawer';
+import { Wallets } from '../../../core/services/wallets';
+import { CreateWalletDrawer } from '../create-wallet-drawer/create-wallet-drawer';
 
 const PAGE_SIZE = 20;
 
 @Component({
-  imports: [CurrencyPipe, DatePipe, CreateTransactionDrawer],
-  selector: 'app-ledger-page',
-  styleUrl: './ledger-page.css',
-  templateUrl: './ledger-page.html',
+  imports: [DatePipe, CreateWalletDrawer],
+  selector: 'app-wallets-page',
+  styleUrl: './wallets-page.css',
+  templateUrl: './wallets-page.html',
 })
-export class LedgerPage implements OnInit {
-  private readonly ledgerService = inject(Ledger);
+export class WalletsPage implements OnInit {
+  private readonly walletsService = inject(Wallets);
 
-  protected readonly entries = signal<LedgerEntry[]>([]);
+  protected readonly wallets = signal<Wallet[]>([]);
   protected readonly page = signal(1);
   protected readonly pageSize = PAGE_SIZE;
   protected readonly totalCount = signal(0);
   protected readonly loading = signal(false);
-  protected readonly wallets = signal<Wallet[]>([]);
   protected readonly showDrawer = signal(false);
   protected readonly showSuccessModal = signal(false);
 
   protected readonly totalPages = computed(() => Math.max(1, Math.ceil(this.totalCount() / this.pageSize)));
 
   ngOnInit(): void {
-    this.loadWallets();
-    this.loadLedgerPage(1);
+    this.loadWalletsPage(1);
   }
 
   protected openDrawer(): void {
@@ -40,10 +37,10 @@ export class LedgerPage implements OnInit {
     this.showDrawer.set(false);
   }
 
-  protected onTransactionCreated(): void {
+  protected onWalletCreated(): void {
     this.showDrawer.set(false);
     this.showSuccessModal.set(true);
-    this.loadLedgerPage(this.page());
+    this.loadWalletsPage(this.page());
   }
 
   protected closeSuccessModal(): void {
@@ -52,31 +49,25 @@ export class LedgerPage implements OnInit {
 
   protected nextPage(): void {
     if (this.page() < this.totalPages()) {
-      this.loadLedgerPage(this.page() + 1);
+      this.loadWalletsPage(this.page() + 1);
     }
   }
 
   protected previousPage(): void {
     if (this.page() > 1) {
-      this.loadLedgerPage(this.page() - 1);
+      this.loadWalletsPage(this.page() - 1);
     }
   }
 
-  private loadWallets(): void {
-    this.ledgerService.getWallets().subscribe({
-      next: (response) => this.wallets.set(response.details?.items ?? []),
-    });
-  }
-
-  private loadLedgerPage(page: number): void {
+  private loadWalletsPage(page: number): void {
     this.loading.set(true);
 
-    this.ledgerService.getLedgerPage(page, this.pageSize).subscribe({
+    this.walletsService.getWalletsPage(page, this.pageSize).subscribe({
       next: (response) => {
         this.loading.set(false);
         this.page.set(response.details?.page ?? page);
         this.totalCount.set(response.details?.totalCount ?? 0);
-        this.entries.set(response.details?.items ?? []);
+        this.wallets.set(response.details?.items ?? []);
       },
       error: () => {
         this.loading.set(false);

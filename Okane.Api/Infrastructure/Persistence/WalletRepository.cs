@@ -1,6 +1,7 @@
 using Npgsql;
 using Okane.Kernel;
 using Okane.Transaction.Application.Interfaces;
+using Okane.Wallet.Application;
 using Okane.Wallet.Application.Interfaces;
 using Okane.Wallet.Domain;
 
@@ -40,6 +41,41 @@ public sealed class WalletRepository(IDbConnectionProvider<NpgsqlConnection> dbC
         }
 
         return wallets;
+    }
+
+    public async Task<PagedResult<Okane.Wallet.Domain.Wallet>> GetPagedForOwnerAsync(
+        Guid ownerId,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        using var activity = DatabaseObservability.Source.StartActivity("database.get_paged_for_owner.wallet");
+
+        var connection = await dbConnectionProvider.GetConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.Transaction = (NpgsqlTransaction?)dbConnectionProvider.CurrentTransaction;
+        command.CommandText = """
+            SELECT id, owner_id, name, kind, status, created_at, COUNT(*) OVER() AS total_count
+            FROM wallets
+            WHERE owner_id = @ownerId
+            ORDER BY created_at DESC
+            LIMIT @pageSize OFFSET @offset
+            """;
+        command.Parameters.AddWithValue("ownerId", ownerId);
+        command.Parameters.AddWithValue("pageSize", pageSize);
+        command.Parameters.AddWithValue("offset", (page - 1) * pageSize);
+
+        var wallets = new List<Okane.Wallet.Domain.Wallet>();
+        var totalCount = 0;
+
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            wallets.Add(Map(reader));
+            totalCount = reader.GetInt32(6);
+        }
+
+        return new PagedResult<Okane.Wallet.Domain.Wallet>(wallets, page, pageSize, totalCount);
     }
 
     public async Task AddAsync(Okane.Wallet.Domain.Wallet wallet, CancellationToken cancellationToken = default)
