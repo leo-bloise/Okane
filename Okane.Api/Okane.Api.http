@@ -1,98 +1,86 @@
 @Okane.Api_HostAddress = http://localhost:5091
 
-### Register a new user
+# Run these requests top-to-bottom, in order, with the REST Client extension (or any client that
+# keeps a cookie jar across requests). Auth is cookie-based: Login sets the "okane_access_token"
+# HttpOnly cookie, and every request after it is authenticated automatically via that cookie - no
+# Authorization header needed. Steps 6-8 reference the wallet ids captured from step 5's response,
+# so step 5 must run before them.
+#
+# Re-running from the top a second time will fail at Register (email already registered, 409) -
+# either change the email below or just start again from Login.
+
+### 1. Register a new user
+# @name register
 POST {{Okane.Api_HostAddress}}/api/auth/register
 Content-Type: application/json
 
 {
-  "name": "Ada Lovelace",
-  "email": "ada@example2.com",
-  "password": "SuperSecret123"
+  "name": "Dashboard Demo",
+  "email": "dashboard.demo@example.com",
+  "password": "DemoPass123"
 }
 
-### Register - invalid input (422 Unprocessable Entity)
-POST {{Okane.Api_HostAddress}}/api/auth/register
-Content-Type: application/json
-
-{
-  "name": "",
-  "email": "not-an-email",
-  "password": "short"
-}
-
-### Register - duplicate email (422 Unprocessable Entity)
-POST {{Okane.Api_HostAddress}}/api/auth/register
-Content-Type: application/json
-
-{
-  "name": "Ada Lovelace",
-  "email": "ada@example.com",
-  "password": "SuperSecret123"
-}
-
-### Login
+### 2. Log in - sets the auth cookie used by every request below
 # @name login
 POST {{Okane.Api_HostAddress}}/api/auth/login
 Content-Type: application/json
 
 {
-  "email": "ada@example.com",
-  "password": "SuperSecret123"
+  "email": "dashboard.demo@example.com",
+  "password": "DemoPass123"
 }
 
-### Login - invalid credentials (401 Unauthorized)
-POST {{Okane.Api_HostAddress}}/api/auth/login
-Content-Type: application/json
+### 3. List wallets - registration auto-creates an "External Wallet" for the new user
+GET {{Okane.Api_HostAddress}}/api/wallets
 
-{
-  "email": "ada@example.com",
-  "password": "wrong-password"
-}
-
-### Get current user (uses the access token returned by the Login request above)
-GET {{Okane.Api_HostAddress}}/api/auth/me
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0ODM4MzFmNS1iNjQ2LTRlYTUtODVhMC1hYTEzNzExMWU2MTIiLCJlbWFpbCI6ImFkYUBleGFtcGxlLmNvbSIsImp0aSI6IjU2OTJmNDU2LWE0NmQtNDM5OS1iNjgzLTAwZmVmZmI2MTk0MiIsIm5hbWUiOiJBZGEgTG92ZWxhY2UiLCJleHAiOjE3ODc4OTEzOTEsImlzcyI6Ik9rYW5lLkFwaSIsImF1ZCI6Ik9rYW5lLkFwaSJ9.VfrRViWKDAvBUA7smrAMejMBfKA6q2zB_UQukrtECgM
-
-### Get current user - unauthorized (no token, 401)
-GET {{Okane.Api_HostAddress}}/api/auth/me
-
-### Create a wallet
+### 4. Create a standard wallet to transact against
+# @name createWallet
 POST {{Okane.Api_HostAddress}}/api/wallets
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0ODM4MzFmNS1iNjQ2LTRlYTUtODVhMC1hYTEzNzExMWU2MTIiLCJlbWFpbCI6ImFkYUBleGFtcGxlLmNvbSIsImp0aSI6IjU2OTJmNDU2LWE0NmQtNDM5OS1iNjgzLTAwZmVmZmI2MTk0MiIsIm5hbWUiOiJBZGEgTG92ZWxhY2UiLCJleHAiOjE3ODc4OTEzOTEsImlzcyI6Ik9rYW5lLkFwaSIsImF1ZCI6Ik9rYW5lLkFwaSJ9.VfrRViWKDAvBUA7smrAMejMBfKA6q2zB_UQukrtECgM
 
 {
-  "name": "Food"
+  "name": "Checking"
 }
 
-### List wallets
+### 5. List wallets again - newest first, so items[0] is "Checking" and items[1] is "External Wallet"
+# @name listWallets
 GET {{Okane.Api_HostAddress}}/api/wallets
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0ODM4MzFmNS1iNjQ2LTRlYTUtODVhMC1hYTEzNzExMWU2MTIiLCJlbWFpbCI6ImFkYUBleGFtcGxlLmNvbSIsImp0aSI6IjU2OTJmNDU2LWE0NmQtNDM5OS1iNjgzLTAwZmVmZmI2MTk0MiIsIm5hbWUiOiJBZGEgTG92ZWxhY2UiLCJleHAiOjE3ODc4OTEzOTEsImlzcyI6Ik9rYW5lLkFwaSIsImF1ZCI6Ik9rYW5lLkFwaSJ9.VfrRViWKDAvBUA7smrAMejMBfKA6q2zB_UQukrtECgM
 
-### Create a transaction
+### 6. Record income: External Wallet -> Checking (Salary)
 POST {{Okane.Api_HostAddress}}/api/transactions
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0ODM4MzFmNS1iNjQ2LTRlYTUtODVhMC1hYTEzNzExMWU2MTIiLCJlbWFpbCI6ImFkYUBleGFtcGxlLmNvbSIsImp0aSI6IjU2OTJmNDU2LWE0NmQtNDM5OS1iNjgzLTAwZmVmZmI2MTk0MiIsIm5hbWUiOiJBZGEgTG92ZWxhY2UiLCJleHAiOjE3ODc4OTEzOTEsImlzcyI6Ik9rYW5lLkFwaSIsImF1ZCI6Ik9rYW5lLkFwaSJ9.VfrRViWKDAvBUA7smrAMejMBfKA6q2zB_UQukrtECgM
 
 {
-  "fromWalletId": "00000000-0000-0000-0000-000000000000",
-  "toWalletId": "00000000-0000-0000-0000-000000000000",
-  "amount": 50.00,
-  "description": "Groceries"
+  "fromWalletId": "{{listWallets.response.body.$.details.items[1].id}}",
+  "toWalletId": "{{listWallets.response.body.$.details.items[0].id}}",
+  "amount": 2000.00,
+  "description": "Salary"
 }
 
-### Create a transaction - same wallet on both sides (422 Unprocessable Entity)
+### 7. Record income: External Wallet -> Checking (Refund)
 POST {{Okane.Api_HostAddress}}/api/transactions
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0ODM4MzFmNS1iNjQ2LTRlYTUtODVhMC1hYTEzNzExMWU2MTIiLCJlbWFpbCI6ImFkYUBleGFtcGxlLmNvbSIsImp0aSI6IjU2OTJmNDU2LWE0NmQtNDM5OS1iNjgzLTAwZmVmZmI2MTk0MiIsIm5hbWUiOiJBZGEgTG92ZWxhY2UiLCJleHAiOjE3ODc4OTEzOTEsImlzcyI6Ik9rYW5lLkFwaSIsImF1ZCI6Ik9rYW5lLkFwaSJ9.VfrRViWKDAvBUA7smrAMejMBfKA6q2zB_UQukrtECgM
 
 {
-  "fromWalletId": "00000000-0000-0000-0000-000000000000",
-  "toWalletId": "00000000-0000-0000-0000-000000000000",
-  "amount": 50.00,
-  "description": "Same wallet on both sides"
+  "fromWalletId": "{{listWallets.response.body.$.details.items[1].id}}",
+  "toWalletId": "{{listWallets.response.body.$.details.items[0].id}}",
+  "amount": 150.00,
+  "description": "Refund"
 }
 
-### List transactions (paginated)
+### 8. Record expense: Checking -> External Wallet (Rent)
+POST {{Okane.Api_HostAddress}}/api/transactions
+Content-Type: application/json
+
+{
+  "fromWalletId": "{{listWallets.response.body.$.details.items[0].id}}",
+  "toWalletId": "{{listWallets.response.body.$.details.items[1].id}}",
+  "amount": 85.50,
+  "description": "Rent"
+}
+
+### 9. List transactions (paginated) to confirm everything was recorded
 GET {{Okane.Api_HostAddress}}/api/transactions?page=1&pageSize=20
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0ODM4MzFmNS1iNjQ2LTRlYTUtODVhMC1hYTEzNzExMWU2MTIiLCJlbWFpbCI6ImFkYUBleGFtcGxlLmNvbSIsImp0aSI6IjU2OTJmNDU2LWE0NmQtNDM5OS1iNjgzLTAwZmVmZmI2MTk0MiIsIm5hbWUiOiJBZGEgTG92ZWxhY2UiLCJleHAiOjE3ODc4OTEzOTEsImlzcyI6Ik9rYW5lLkFwaSIsImF1ZCI6Ik9rYW5lLkFwaSJ9.VfrRViWKDAvBUA7smrAMejMBfKA6q2zB_UQukrtECgM
+
+### 10. Generate the dashboard report for the current month
+GET {{Okane.Api_HostAddress}}/api/dashboard
