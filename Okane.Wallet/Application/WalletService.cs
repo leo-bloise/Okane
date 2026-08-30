@@ -18,6 +18,14 @@ public sealed class WalletService(
     {
         using var activity = WalletObservability.ActivitySource.StartActivity("wallet.create_standard");
 
+        var trimmedName = name.Trim();
+        if (await walletRepository.ExistsByOwnerAndNameAsync(ownerId, trimmedName, cancellationToken))
+        {
+            logger.LogWarning("Wallet creation rejected: owner {OwnerId} already has a wallet named '{Name}'.", ownerId, trimmedName);
+            activity?.SetStatus(ActivityStatusCode.Error, "Wallet name already exists.");
+            throw new WalletNameAlreadyExistsException(ownerId, trimmedName);
+        }
+
         var wallet = Domain.Wallet.CreateStandard(ownerId, name);
         await walletRepository.AddAsync(wallet, cancellationToken);
 

@@ -2,6 +2,7 @@ using Npgsql;
 using Okane.Kernel;
 using Okane.Transaction.Application.Interfaces;
 using Okane.Wallet.Application;
+using Okane.Wallet.Application.Exceptions;
 using Okane.Wallet.Application.Interfaces;
 using Okane.Wallet.Domain;
 
@@ -78,6 +79,20 @@ public sealed class WalletRepository(IDbConnectionProvider<NpgsqlConnection> dbC
         return new PagedResult<Okane.Wallet.Domain.Wallet>(wallets, page, pageSize, totalCount);
     }
 
+    public async Task<bool> ExistsByOwnerAndNameAsync(Guid ownerId, string name, CancellationToken cancellationToken = default)
+    {
+        using var activity = DatabaseObservability.Source.StartActivity("database.exists_by_owner_and_name.wallet");
+
+        var connection = await dbConnectionProvider.GetConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.Transaction = (NpgsqlTransaction?)dbConnectionProvider.CurrentTransaction;
+        command.CommandText = "SELECT EXISTS(SELECT 1 FROM wallets WHERE owner_id = @ownerId AND name = @name)";
+        command.Parameters.AddWithValue("ownerId", ownerId);
+        command.Parameters.AddWithValue("name", name);
+
+        return (bool)(await command.ExecuteScalarAsync(cancellationToken))!;
+    }
+
     public async Task AddAsync(Okane.Wallet.Domain.Wallet wallet, CancellationToken cancellationToken = default)
     {
         using var activity = DatabaseObservability.Source.StartActivity("database.add.wallet");
@@ -96,7 +111,14 @@ public sealed class WalletRepository(IDbConnectionProvider<NpgsqlConnection> dbC
         command.Parameters.AddWithValue("status", wallet.Status.ToString());
         command.Parameters.AddWithValue("createdAt", wallet.CreatedAt);
 
-        await command.ExecuteNonQueryAsync(cancellationToken);
+        try
+        {
+            await command.ExecuteNonQueryAsync(cancellationToken);
+        }
+        catch (PostgresException ex) when (ex.SqlState == PostgresErrorCodes.UniqueViolation)
+        {
+            throw new WalletNameAlreadyExistsException(wallet.OwnerId, wallet.Name);
+        }
     }
 
     public async Task UpdateAsync(Okane.Wallet.Domain.Wallet wallet, CancellationToken cancellationToken = default)
@@ -115,7 +137,14 @@ public sealed class WalletRepository(IDbConnectionProvider<NpgsqlConnection> dbC
         command.Parameters.AddWithValue("name", wallet.Name);
         command.Parameters.AddWithValue("status", wallet.Status.ToString());
 
-        await command.ExecuteNonQueryAsync(cancellationToken);
+        try
+        {
+            await command.ExecuteNonQueryAsync(cancellationToken);
+        }
+        catch (PostgresException ex) when (ex.SqlState == PostgresErrorCodes.UniqueViolation)
+        {
+            throw new WalletNameAlreadyExistsException(wallet.OwnerId, wallet.Name);
+        }
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
