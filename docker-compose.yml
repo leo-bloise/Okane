@@ -71,6 +71,46 @@ services:
       otel-collector:
         condition: service_healthy
 
+  okane-api:
+    build:
+      context: .
+      dockerfile: Okane.Api/Dockerfile
+    container_name: okane-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_HTTP_PORTS: 8080
+      Logging__LogLevel__Default: Information
+      Logging__LogLevel__Microsoft.AspNetCore: Warning
+      Observability__ServiceName: Okane.Api
+      Observability__OtlpEndpoint: http://otel-collector:4317
+      AllowedHosts: "*"
+      ConnectionStrings__Okane: Host=postgres;Port=5432;Database=okane;Username=okane;Password=okane
+      Jwt__Issuer: Okane.Api
+      Jwt__Audience: Okane.Api
+      Jwt__SigningKey: EFYGCL4ebIDhxloPYEgys6CHXoCxnzUs2AdSKQ8JAJxEfHdzHDaYh1Oy9Fe4uqHB
+      Jwt__ExpiryMinutes: 60
+      Cors__Origins__0: http://localhost:4200
+    ports:
+      - "5091:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      otel-collector:
+        condition: service_healthy
+
+  okane-client:
+    build:
+      context: .
+      dockerfile: Okane.Client/Dockerfile
+    container_name: okane-client
+    environment:
+      API_URL: http://okane-api:8080
+      NGINX_PORT: 80
+    ports:
+      - "4200:80"
+    depends_on:
+      - okane-api
+
 volumes:
   grafana-data:
   prometheus-data:
