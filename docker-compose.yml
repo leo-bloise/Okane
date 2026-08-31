@@ -72,9 +72,7 @@ services:
         condition: service_healthy
 
   okane-api:
-    build:
-      context: .
-      dockerfile: Okane.Api/Dockerfile
+    image: bloiseleo/okane.backend:${IMAGE_TAG:-v0.1.0}
     container_name: okane-api
     environment:
       ASPNETCORE_ENVIRONMENT: Production
@@ -87,7 +85,7 @@ services:
       ConnectionStrings__Okane: Host=postgres;Port=5432;Database=okane;Username=okane;Password=okane
       Jwt__Issuer: Okane.Api
       Jwt__Audience: Okane.Api
-      Jwt__SigningKey: EFYGCL4ebIDhxloPYEgys6CHXoCxnzUs2AdSKQ8JAJxEfHdzHDaYh1Oy9Fe4uqHB
+      Jwt__SigningKey: ${JWT_SIGNING_KEY}
       Jwt__ExpiryMinutes: 60
       Cors__Origins__0: http://localhost:4200
     ports:
@@ -99,17 +97,47 @@ services:
         condition: service_healthy
 
   okane-client:
-    build:
-      context: .
-      dockerfile: Okane.Client/Dockerfile
+    image: bloiseleo/okane.frontend:${IMAGE_TAG:-v0.1.0}
     container_name: okane-client
     environment:
       API_URL: http://okane-api:8080
       NGINX_PORT: 80
-    ports:
-      - "4200:80"
     depends_on:
       - okane-api
+
+  # Public-facing TLS termination in front of okane-client. Its config
+  # (nginx/active.conf.template) starts as a plain-HTTP proxy so the site works
+  # immediately; it's switched to the HTTPS config (see nginx/*.conf.template)
+  # once a certificate has actually been issued - see /opt/okane/init-https.sh
+  # on the host.
+  reverse-proxy:
+    image: nginx:1.27-alpine
+    container_name: okane-reverse-proxy
+    environment:
+      DOMAIN: ${DOMAIN}
+    volumes:
+      - ./nginx/active.conf.template:/etc/nginx/templates/default.conf.template:ro
+      - ./certbot/www:/var/www/certbot:ro
+      - ./certbot/conf:/etc/letsencrypt:ro
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - okane-client
+
+  # Long-running renewal loop. Initial issuance is a one-time manual step
+  # (init-https.sh) since it needs DNS already pointed at this host; this
+  # service just retries `certbot renew` every 12h, which is a no-op until a
+  # certificate actually exists.
+  certbot:
+    image: certbot/certbot:latest
+    container_name: okane-certbot
+    volumes:
+      - ./certbot/www:/var/www/certbot
+      - ./certbot/conf:/etc/letsencrypt
+    entrypoint: ["/bin/sh", "-c", "trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet; sleep 12h & wait $${!}; done;"]
+    depends_on:
+      - reverse-proxy
 
 volumes:
   grafana-data:

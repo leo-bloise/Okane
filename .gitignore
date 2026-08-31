@@ -385,4 +385,16 @@ FodyWeavers.xsd
 # Environment / secrets
 .env
 .env.*
+!.env.example
 appsettings.*.local.json
+
+# Terraform
+terraform/.terraform/
+terraform/.terraform.tfstate.lock.info
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/*.tfvars
+terraform/*.tfvars.json
+terraform/crash.log
+terraform/override.tf
+terraform/override.tf.json

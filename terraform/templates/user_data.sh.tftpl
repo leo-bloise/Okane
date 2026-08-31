@@ -1,0 +1,48 @@
+#!/bin/bash
+set -euxo pipefail
+
+# Install Docker Engine + the Compose plugin.
+curl -fsSL https://get.docker.com | sh
+systemctl enable --now docker
+usermod -aG docker ${ssh_user}
+
+mkdir -p /opt/okane
+
+cat <<'COMPOSE_EOF' > /opt/okane/docker-compose.yml
+${docker_compose_content}
+COMPOSE_EOF
+
+cat <<'ENV_EOF' > /opt/okane/.env
+${env_file_content}
+ENV_EOF
+chmod 600 /opt/okane/.env
+
+%{ for path, content in support_files ~}
+mkdir -p "/opt/okane/$(dirname "${path}")"
+cat <<'FILE_EOF' > "/opt/okane/${path}"
+${content}
+FILE_EOF
+%{ endfor ~}
+
+mkdir -p /opt/okane/certbot/www /opt/okane/certbot/conf
+
+# Start in the plain-HTTP nginx config; nginx.https.conf.template references a
+# certificate that doesn't exist yet, so switching to it is a one-time manual
+# step (init-https.sh) run once DNS points at this host - see it and
+# https_setup_command in `terraform output`.
+cp /opt/okane/nginx/reverse-proxy.http.conf.template /opt/okane/nginx/active.conf.template
+
+cat <<'INIT_HTTPS_EOF' > /opt/okane/init-https.sh
+${init_https_script}
+INIT_HTTPS_EOF
+chmod +x /opt/okane/init-https.sh
+
+# Reload nginx daily so it picks up certs renewed by the certbot container
+# (renewal alone doesn't make nginx re-read the cert files off disk).
+cat <<'CRON_EOF' > /etc/cron.d/okane-nginx-reload
+0 3 * * * root cd /opt/okane && docker compose exec -T reverse-proxy nginx -s reload >>/var/log/okane-nginx-reload.log 2>&1
+CRON_EOF
+
+cd /opt/okane
+docker compose pull
+docker compose up -d

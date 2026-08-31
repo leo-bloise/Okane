@@ -1,5 +1,7 @@
 # Okane (お金)
 
+🔗 **Live app (alpha):** [okane.bloisdev.com](https://okane.bloisdev.com) — early, unstable, may reset/break without notice.
+
 Okane is a personal finance API built around a single, append-only **Ledger**. Instead of storing wallet balances directly, every balance is derived by replaying the transactions recorded against a wallet — money simply doesn't move any other way.
 
 ## Domain model
