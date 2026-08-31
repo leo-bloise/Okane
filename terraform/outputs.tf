@@ -18,6 +18,11 @@ output "app_url" {
   value       = "http://${aws_eip.okane.public_ip}"
 }
 
+output "grafana_url" {
+  description = "Grafana dashboard, reachable on the same domain as the app but on port 3000 (plain HTTP - no TLS on this port)."
+  value       = "http://${local.env_vars["DOMAIN"]}:3000"
+}
+
 output "dns_setup_instructions" {
   description = "DNS record to create at your DNS provider (Cloudflare) before running init-https.sh."
   value       = "Create a DNS-only (not proxied) A record: ${local.env_vars["DOMAIN"]} -> ${aws_eip.okane.public_ip}"
