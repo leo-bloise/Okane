@@ -7,3 +7,6 @@ CREATE TABLE users
     password_hash text         NOT NULL,
     created_at    timestamptz  NOT NULL
 );
+
+-- migrate:down
+DROP TABLE users;

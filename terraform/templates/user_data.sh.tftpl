@@ -47,11 +47,17 @@ DB_PASSWORD=$(aws secretsmanager get-secret-value \
   --secret-id '${db_secret_arn}' \
   --query SecretString --output text | jq -r .password)
 
-export DATABASE_URL="postgres://${db_username}:$DB_PASSWORD@${db_host}:${db_port}/${db_name}?sslmode=require"
+# The RDS-generated password can contain characters (e.g. [ ] ? ( > ) that are
+# unsafe unescaped in a URL or in a semicolon-delimited connection string, so
+# each usage below gets its own escaping.
+DB_PASSWORD_URLENC=$(jq -rn --arg v "$DB_PASSWORD" '$v|@uri')
+
+export DATABASE_URL="postgres://${db_username}:$DB_PASSWORD_URLENC@${db_host}:${db_port}/${db_name}?sslmode=require"
 dbmate --migrations-dir /opt/okane/Migrations up
 
+DB_PASSWORD_ESCAPED=$(printf '%s' "$DB_PASSWORD" | sed "s/'/''/g")
 sed -i '/^DB_CONNECTION_STRING=/d' /opt/okane/.env
-echo "DB_CONNECTION_STRING=Host=${db_host};Port=${db_port};Database=${db_name};Username=${db_username};Password=$DB_PASSWORD" >> /opt/okane/.env
+echo "DB_CONNECTION_STRING=Host=${db_host};Port=${db_port};Database=${db_name};Username=${db_username};Password='$DB_PASSWORD_ESCAPED'" >> /opt/okane/.env
 MIGRATE_EOF
 chmod 700 /opt/okane/migrate.sh
 /opt/okane/migrate.sh

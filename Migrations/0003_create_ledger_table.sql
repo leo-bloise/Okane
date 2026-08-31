@@ -13,3 +13,6 @@ CREATE TABLE ledger
 
 CREATE INDEX ix_ledger_from_wallet_id ON ledger (from_wallet_id);
 CREATE INDEX ix_ledger_to_wallet_id ON ledger (to_wallet_id);
+
+-- migrate:down
+DROP TABLE ledger;

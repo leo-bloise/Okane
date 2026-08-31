@@ -10,3 +10,6 @@ CREATE TABLE wallets
 );
 
 CREATE INDEX ix_wallets_owner_id ON wallets (owner_id);
+
+-- migrate:down
+DROP TABLE wallets;
