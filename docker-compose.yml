@@ -105,11 +105,6 @@ services:
     depends_on:
       - okane-api
 
-  # Public-facing TLS termination in front of okane-client. Its config
-  # (nginx/active.conf.template) starts as a plain-HTTP proxy so the site works
-  # immediately; it's switched to the HTTPS config (see nginx/*.conf.template)
-  # once a certificate has actually been issued - see /opt/okane/init-https.sh
-  # on the host.
   reverse-proxy:
     image: nginx:1.27-alpine
     container_name: okane-reverse-proxy
@@ -125,10 +120,6 @@ services:
     depends_on:
       - okane-client
 
-  # Long-running renewal loop. Initial issuance is a one-time manual step
-  # (init-https.sh) since it needs DNS already pointed at this host; this
-  # service just retries `certbot renew` every 12h, which is a no-op until a
-  # certificate actually exists.
   certbot:
     image: certbot/certbot:latest
     container_name: okane-certbot
