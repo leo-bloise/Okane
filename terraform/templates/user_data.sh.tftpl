@@ -6,6 +6,12 @@ curl -fsSL https://get.docker.com | sh
 systemctl enable --now docker
 usermod -aG docker ${ssh_user}
 
+apt-get update
+apt-get install -y awscli jq
+
+curl -fsSL -o /usr/local/bin/dbmate https://github.com/amacneil/dbmate/releases/latest/download/dbmate-linux-amd64
+chmod +x /usr/local/bin/dbmate
+
 mkdir -p /opt/okane
 
 cat <<'COMPOSE_EOF' > /opt/okane/docker-compose.yml
@@ -25,6 +31,30 @@ FILE_EOF
 %{ endfor ~}
 
 mkdir -p /opt/okane/certbot/www /opt/okane/certbot/conf
+
+# Fetches the RDS master password from Secrets Manager and applies any
+# not-yet-applied files in Migrations/ via dbmate (idempotent - dbmate tracks
+# applied migrations in a schema_migrations table on the target database).
+# Written as its own script so it can also be re-run manually over SSH for a
+# migration-only redeploy, without recreating the instance:
+#   ssh ${ssh_user}@<eip> 'sudo /opt/okane/migrate.sh'
+cat <<'MIGRATE_EOF' > /opt/okane/migrate.sh
+#!/bin/bash
+set -euxo pipefail
+
+DB_PASSWORD=$(aws secretsmanager get-secret-value \
+  --region ${aws_region} \
+  --secret-id '${db_secret_arn}' \
+  --query SecretString --output text | jq -r .password)
+
+export DATABASE_URL="postgres://${db_username}:$DB_PASSWORD@${db_host}:${db_port}/${db_name}?sslmode=require"
+dbmate --migrations-dir /opt/okane/Migrations up
+
+sed -i '/^DB_CONNECTION_STRING=/d' /opt/okane/.env
+echo "DB_CONNECTION_STRING=Host=${db_host};Port=${db_port};Database=${db_name};Username=${db_username};Password=$DB_PASSWORD" >> /opt/okane/.env
+MIGRATE_EOF
+chmod 700 /opt/okane/migrate.sh
+/opt/okane/migrate.sh
 
 # Start in the plain-HTTP nginx config; nginx.https.conf.template references a
 # certificate that doesn't exist yet, so switching to it is a one-time manual

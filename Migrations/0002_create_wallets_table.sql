@@ -1,3 +1,4 @@
+-- migrate:up
 CREATE TABLE wallets
 (
     id         uuid         PRIMARY KEY,

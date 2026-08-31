@@ -33,6 +33,42 @@ variable "ssh_allowed_cidr_blocks" {
   default     = ["0.0.0.0/0"]
 }
 
+variable "db_instance_class" {
+  description = "RDS instance class. db.t4g.micro is the smallest Postgres offers on RDS."
+  type        = string
+  default     = "db.t4g.micro"
+}
+
+variable "db_allocated_storage_gb" {
+  description = "RDS allocated storage in GB (gp3)."
+  type        = number
+  default     = 20
+}
+
+variable "db_engine_version" {
+  description = "Postgres engine version for RDS."
+  type        = string
+  default     = "17"
+}
+
+variable "db_backup_retention_days" {
+  description = "Automated backup retention in days. 0 disables automated backups (no point-in-time recovery) - fine while there's no real data to protect yet."
+  type        = number
+  default     = 0
+}
+
+variable "db_deletion_protection" {
+  description = "Whether to enable RDS deletion protection."
+  type        = bool
+  default     = true
+}
+
+variable "db_skip_final_snapshot" {
+  description = "Whether to skip the final snapshot when the RDS instance is destroyed. true avoids leaving a snapshot behind (and its cost) for this low-stakes deployment."
+  type        = bool
+  default     = true
+}
+
 # IMAGE_TAG, DOMAIN, LETSENCRYPT_EMAIL, and JWT_SIGNING_KEY are no longer
 # Terraform variables - they live in ../.env (gitignored; see ../.env.example),
 # which main.tf reads directly and ships to the instance. DNS for DOMAIN is

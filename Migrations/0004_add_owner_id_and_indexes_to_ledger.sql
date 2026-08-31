@@ -1,3 +1,4 @@
+-- migrate:up
 ALTER TABLE ledger ADD COLUMN owner_id uuid REFERENCES users (id);
 
 UPDATE ledger

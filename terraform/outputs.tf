@@ -27,3 +27,23 @@ output "https_setup_command" {
   description = "One-time command to run over SSH once DNS has propagated, to obtain the certificate and switch nginx to HTTPS."
   value       = "ssh ubuntu@${aws_eip.okane.public_ip} 'sudo /opt/okane/init-https.sh'"
 }
+
+output "db_endpoint" {
+  description = "RDS Postgres endpoint (host:port)."
+  value       = aws_db_instance.okane.endpoint
+}
+
+output "db_port" {
+  description = "RDS Postgres port."
+  value       = aws_db_instance.okane.port
+}
+
+output "db_secret_arn" {
+  description = "Secrets Manager ARN holding the RDS master password. Fetch with: aws secretsmanager get-secret-value --secret-id <arn> --query SecretString --output text"
+  value       = aws_db_instance.okane.master_user_secret[0].secret_arn
+}
+
+output "db_tunnel_command" {
+  description = "Command to open an SSH tunnel to RDS for ad-hoc psql access (RDS has no public IP by design)."
+  value       = "ssh -L 5432:${aws_db_instance.okane.address}:${aws_db_instance.okane.port} ubuntu@${aws_eip.okane.public_ip}"
+}

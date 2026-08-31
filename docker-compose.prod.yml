@@ -1,0 +1,115 @@
+services:
+  grafana:
+    image: grafana/grafana:latest
+    container_name: okane-grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/etc/grafana/dashboards:ro
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    depends_on:
+      prometheus:
+        condition: service_healthy
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: okane-otel-collector
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./otel/otel-collector-config.yaml:/etc/otel-collector-config.yaml:ro
+    ports:
+      - "4317:4317" # OTLP gRPC
+      - "4318:4318" # OTLP HTTP
+      - "8889:8889" # Prometheus scrape endpoint
+    healthcheck:
+      test: ["CMD", "/otelcol-contrib", "validate", "--config=/etc/otel-collector-config.yaml"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: okane-prometheus
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    depends_on:
+      otel-collector:
+        condition: service_healthy
+
+  okane-api:
+    image: bloiseleo/okane.backend:${IMAGE_TAG:-v0.1.0}
+    container_name: okane-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_HTTP_PORTS: 8080
+      Logging__LogLevel__Default: Information
+      Logging__LogLevel__Microsoft.AspNetCore: Warning
+      Observability__ServiceName: Okane.Api
+      Observability__OtlpEndpoint: http://otel-collector:4317
+      AllowedHosts: "*"
+      ConnectionStrings__Okane: ${DB_CONNECTION_STRING}
+      Jwt__Issuer: Okane.Api
+      Jwt__Audience: Okane.Api
+      Jwt__SigningKey: ${JWT_SIGNING_KEY}
+      Jwt__ExpiryMinutes: 60
+      Cors__Origins__0: http://localhost:4200
+    ports:
+      - "5091:8080"
+    depends_on:
+      otel-collector:
+        condition: service_healthy
+
+  okane-client:
+    image: bloiseleo/okane.frontend:${IMAGE_TAG:-v0.1.0}
+    container_name: okane-client
+    environment:
+      API_URL: http://okane-api:8080
+      NGINX_PORT: 80
+    depends_on:
+      - okane-api
+
+  reverse-proxy:
+    image: nginx:1.27-alpine
+    container_name: okane-reverse-proxy
+    environment:
+      DOMAIN: ${DOMAIN}
+    volumes:
+      - ./nginx/active.conf.template:/etc/nginx/templates/default.conf.template:ro
+      - ./certbot/www:/var/www/certbot:ro
+      - ./certbot/conf:/etc/letsencrypt:ro
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - okane-client
+
+  certbot:
+    image: certbot/certbot:latest
+    container_name: okane-certbot
+    volumes:
+      - ./certbot/www:/var/www/certbot
+      - ./certbot/conf:/etc/letsencrypt
+    entrypoint: ["/bin/sh", "-c", "trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet; sleep 12h & wait $${!}; done;"]
+    depends_on:
+      - reverse-proxy
+
+volumes:
+  grafana-data:
+  prometheus-data:

@@ -101,8 +101,14 @@ Optional overrides (safe defaults already exist in `appsettings.json`):
 
 ## Database migrations
 
-Migrations are plain, numbered SQL files in [`Migrations/`](Migrations), applied in order by Postgres on container init:
+Migrations are plain, numbered SQL files in [`Migrations/`](Migrations), each starting with a `-- migrate:up` marker:
 
 - `0001_create_users_table.sql`
 - `0002_create_wallets_table.sql`
 - `0003_create_ledger_table.sql`
+- `0004_add_owner_id_and_indexes_to_ledger.sql`
+- `0005_add_unique_owner_name_to_wallets.sql`
+
+Locally, `docker compose up` applies them in order automatically the first time the Postgres container initializes (bind-mounted at `/docker-entrypoint-initdb.d`) — this only runs once, against an empty data directory.
+
+In Production, the database is Amazon RDS, so instead the same files are applied via [dbmate](https://github.com/amacneil/dbmate) during EC2 instance boot (see [`terraform/templates/user_data.sh.tftpl`](terraform/templates/user_data.sh.tftpl)). dbmate tracks which files have already run in a `schema_migrations` table, so re-running it (including on every instance redeploy) only applies new migrations. To add a migration, drop a new `NNNN_description.sql` file in `Migrations/` starting with `-- migrate:up`.

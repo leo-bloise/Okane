@@ -1,3 +1,4 @@
+-- migrate:up
 CREATE TABLE ledger
 (
     id             uuid           PRIMARY KEY,

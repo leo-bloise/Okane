@@ -72,10 +72,12 @@ resource "aws_key_pair" "okane" {
 }
 
 locals {
-  # docker-compose.yml bind-mounts these by relative path (./otel/..., ./prometheus/...,
-  # ./grafana/..., ./Migrations/...). Docker silently creates an empty directory for a
+  # docker-compose.prod.yml bind-mounts these by relative path (./otel/..., ./prometheus/...,
+  # ./grafana/..., ./nginx/...). Docker silently creates an empty directory for a
   # missing bind-mount source instead of failing, so every one of these files has to
-  # actually exist on the instance before `docker compose up` runs.
+  # actually exist on the instance before `docker compose up` runs. Migrations isn't
+  # bind-mounted by compose anymore, but still needs to be on the instance for
+  # migrate.sh (dbmate) to read.
   support_dirs = ["otel", "prometheus", "grafana", "Migrations", "nginx"]
 
   support_files = merge([
@@ -123,11 +125,19 @@ resource "aws_instance" "okane" {
   user_data_base64 = base64gzip(templatefile("${path.module}/templates/user_data.sh.tftpl", {
     ssh_user               = "ubuntu"
     env_file_content       = sensitive(chomp(local.env_file_content))
-    docker_compose_content = file("${path.module}/../docker-compose.yml")
+    docker_compose_content = file("${path.module}/../docker-compose.prod.yml")
     support_files          = local.support_files
     init_https_script      = file("${path.module}/templates/init-https.sh")
+    aws_region             = var.aws_region
+    db_host                = aws_db_instance.okane.address
+    db_port                = aws_db_instance.okane.port
+    db_name                = aws_db_instance.okane.db_name
+    db_username            = aws_db_instance.okane.username
+    db_secret_arn          = aws_db_instance.okane.master_user_secret[0].secret_arn
   }))
   user_data_replace_on_change = true
+
+  iam_instance_profile = aws_iam_instance_profile.okane.name
 
   tags = {
     Name = var.project_name

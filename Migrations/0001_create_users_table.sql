@@ -1,3 +1,4 @@
+-- migrate:up
 CREATE TABLE users
 (
     id            uuid         PRIMARY KEY,
